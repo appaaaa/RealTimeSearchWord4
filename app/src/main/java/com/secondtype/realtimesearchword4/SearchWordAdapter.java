@@ -115,17 +115,22 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
 //
 //        holder.rankingTextView.setText(mDataset.get(position).getRanking());
         holder.newsTitleTextView.setText(mDataset.get(position).getNewsTitle());
-        Glide.with(holder.newsImageImageView.getContext())
-                .load(mDataset.get(position).getNewsImage())
 
-                .into(holder.newsImageImageView);
+        //이미지가 있는경우와 없는경우 분리
+        Log.v("imageTest " + position, mDataset.get(position).getNewsImage());
+        if(mDataset.get(position).getNewsImage().equals("NOIMAGE")){
+            holder.newsImageImageView.setImageResource(R.drawable.icon_no);
+        }else {
+            Glide.with(holder.newsImageImageView.getContext())
+                    .load(mDataset.get(position).getNewsImage())
+
+                    .into(holder.newsImageImageView);
+        }
 
         final String s = mDataset.get(position).getNewsTitle();
 
         if(!mDataset.get(position).getReplyArrayList().isEmpty()){
             holder.replyLinearLayout.setVisibility(View.VISIBLE);
-            Log.v("replybug1", mDataset.get(position).getWord());
-            Log.v("replybug1", Integer.toString(mDataset.get(position).getReplyArrayList().size()));
             holder.replyName.setText(mDataset.get(position).getReplyArrayList().get(0).name);
             holder.replyText.setText(mDataset.get(position).getReplyArrayList().get(0).text);
             holder.replyTime.setText(mDataset.get(position).getReplyArrayList().get(0).time);
@@ -143,10 +148,10 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
 
                 if(s != null && MainActivity.switchs) {
                     Intent intent = new Intent(mMainActivity, DetailWeb.class);
-                    intent.putExtra("newsURL", mDataset.get(position).getNewsURL());
-                    intent.putExtra("mDataset", mDataset);
-                    intent.putExtra("allList", false);
-                    intent.putExtra("currentNumber", position);
+                    intent.putExtra("newsURL", mDataset.get(position).getNewsURL()); //클릭한 뉴스 url
+                    intent.putExtra("mDataset", mDataset); //전체 데이터
+                    intent.putExtra("allList", false); // 전체에서 선택한 것
+                    intent.putExtra("currentNumber", position); //현재 클릭한 검색어 포지션
                     mMainActivity.startActivity(intent);
                     mMainActivity.overridePendingTransition(R.anim.rightin, R.anim.notmove);
                 }
@@ -163,8 +168,6 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                 view = mMainActivity.getLayoutInflater().inflate(R.layout.reply_listview, null);
                 replyListView = (ListView)view.findViewById(R.id.listview_reply);
                 replyListViewAdapter = new ListViewAdapter(mMainActivity, mDataset.get(position).getReplyArrayList());
-                Log.v("position", "position : " + Integer.toString(position));
-                Log.v("position", "pos : " + Integer.toString(pos));
                 ///////////////////+ reply back Button ////////////////////////
                 replyBack = (Button)view.findViewById(R.id.button_back_reply);
                 ///////////////////////////////////////////////////////////////

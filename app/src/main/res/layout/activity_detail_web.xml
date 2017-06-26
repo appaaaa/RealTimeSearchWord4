@@ -75,6 +75,8 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_weight="1"
+        android:padding="1dp"
+        android:background="#D5D5D5"
         android:orientation="vertical">
         <TextView
             android:id="@+id/textview_word1"
@@ -82,23 +84,45 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_weight="1"
+            android:background="#FFFFFF"
+            android:textColor="#000000"
             android:textSize="15sp"
+            android:maxLines="1"
+            android:padding="3dp"
             android:text="키워드1"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F6F6F6"
+            />
         <TextView
             android:id="@+id/textview_word2"
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_weight="1"
-            android:textSize="25sp"
+            android:background="#FFFFFF"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            android:maxLines="1"
+            android:padding="3dp"
             android:text="키워드1"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F6F6F6"
+            />
         <TextView
             android:id="@+id/textview_word3"
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_weight="1"
+            android:background="#FFFFFF"
+            android:textColor="#000000"
+            android:maxLines="1"
             android:textSize="15sp"
+            android:padding="3dp"
             android:text="키워드1"/>
 
     </LinearLayout>

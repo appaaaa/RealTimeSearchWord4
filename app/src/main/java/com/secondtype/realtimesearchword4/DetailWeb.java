@@ -70,7 +70,7 @@ public class DetailWeb extends AppCompatActivity {
     Button editBtn;
     /////////////////////////////////////////
 
-
+    Boolean isList = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,40 +89,32 @@ public class DetailWeb extends AppCompatActivity {
         Intent mIntent = getIntent();
 
         if(mIntent.getSerializableExtra("mDataset") != null) {
+            mData = new ArrayList<>();
 
             mData.addAll((ArrayList<SearchWord>) getIntent().getSerializableExtra("mDataset"));
         }
 
         currentNum = mIntent.getIntExtra("currentNumber",1);
 
-        if(mIntent.getStringExtra("newsURL") != null) {
-
-            /// + check Case //////////////////
-            checkCase = mIntent.getBooleanExtra("allList", false);
-            if(checkCase){
-                mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + mData.get(currentNum).getWord() + "&sm=top_lve&ie=utf8";
-            }else {
-                mURL = mIntent.getStringExtra("newsURL");
-                //mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + mData.get(currentNum).getWord() + "&sm=top_lve&ie=utf8";
-            }
-            //////////////////////////////////
-            Log.v("URL ", checkCase + mURL);
-
-            openWeb(mURL);
-
-        }else{
-            Log.v("URL ", "null");
-        }
+        openWeb(mData.get(currentNum).getNewsURL()); //처음 뉴스화면
 
         word1.setText(mData.get(currentNum).getNewsTitle2());
         word2.setText(mData.get(currentNum).getNewsTitle3());
         word3.setText(mData.get(currentNum).getNewsTitle4());
 
+        isList = mIntent.getBooleanExtra("allList", false);
+
+        if(isList){ //리스트를 클릭해서 넘어온 거면 검색보여주기
+
+        }else{ //카드에서 넘어온거면 기사 보여주기
+
+        }
+
         word1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 Integer a = word1.getText().toString().indexOf(".");
-                String word = mData.get(currentNum).getNewsTitle2();
+                String word = mData.get(currentNum).getWord();
                 mURL = mData.get(currentNum).getNewsURL2();
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
@@ -133,7 +125,7 @@ public class DetailWeb extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Integer a = word2.getText().toString().indexOf(".");
-                String word = mData.get(currentNum).getNewsTitle3();
+                String word = mData.get(currentNum).getWord();
                 mURL = mData.get(currentNum).getNewsURL3();
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
@@ -144,7 +136,7 @@ public class DetailWeb extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Integer a = word3.getText().toString().indexOf(".");
-                String word = mData.get(currentNum).getNewsTitle4();
+                String word = mData.get(currentNum).getWord();
                 mURL = mData.get(currentNum).getNewsURL4();
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
@@ -170,7 +162,7 @@ public class DetailWeb extends AppCompatActivity {
             }
         });
         ////////////////////////////////////////////
-        mData = new ArrayList<>();
+
 
 
 

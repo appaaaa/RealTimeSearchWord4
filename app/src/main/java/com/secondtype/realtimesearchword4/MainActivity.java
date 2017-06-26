@@ -218,6 +218,12 @@ public class MainActivity extends AppCompatActivity {
                 daumBtn.setTextColor(Color.parseColor("#000000"));
                 naverBtn.setTextSize(19);
                 naverBtn.setTextColor(Color.parseColor("#00c73c"));
+
+                myDataset.clear();
+                switchs = false;
+
+                NaverParser NParser = new NaverParser();
+                NParser.execute();
             }
         });
 
@@ -267,13 +273,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected ArrayList<SearchWord> doInBackground(Void... voids) {
-
             ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
 
             try{
                 Document mDocument = Jsoup.connect(url).get();
-//                Elements mElements = mDocument.select("ol#realrank > li > a");
-
                 Elements mElements = mDocument.select("div.select_date ul li");
 
                 ////// + list만 빨리 먼저 받아오기
@@ -282,55 +285,39 @@ public class MainActivity extends AppCompatActivity {
                     wordList.add(mElements.get(i).select("span.title").text());
                 }
 
-                for(int i = 0; i < 20; i++) {
+                for(int i = 0; i < mElements.size(); i++) {
                     SearchWord searchWord = new SearchWord();
                     searchWord.setNumber(Integer.toString(i + 1));
                     searchWord.setWord(mElements.get(i).select("span.title").text());
 
-                    String url = "https://search.naver.com/search.naver?where=nexearch&query=" + searchWord.getWord() + "&sm=top_lve&ie=utf8";
+                    String newsUrl = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
 
                     try {
-                        Document mDocument2 = Jsoup.connect(url).get();
-                        Elements newsElement = mDocument2.select("li#sp_nws_all1");
-                        Elements newsElement2 = mDocument2.select("div.news ul li");
-                        Log.v("newssection","test");
-                        Log.v("newssection",newsElement2.select("dl dt a").get(2).text());
-                        Log.v("newssection",Integer.toString(newsElement2.size()));
+                        Document mDocument2 = Jsoup.connect(newsUrl).get();
+                        Elements newsElement = mDocument2.select("div.news ul.type01>li");
 
-
-                        if (newsElement != null) {
-                            String title = "BASIC";
-                            String title2 = "BASIC";
-                            String title3 = "BASIC";
-                            String title4 = "BASIC";
-                            title = newsElement.select("dl dt a").text();
-
-                            //Log.v("title2", title2);
-                            /*
-                            title2 = newsElement2.first().select("dl dt a").text();
-                            title2 = newsElement2.next().get(1).select("dl dt a").text();
-                            title3 = newsElement2.next().get(2).select("dl dt a").text();
-                            title4 = newsElement2.next().select("dl dt a").text();
-
-                            Log.v("title2", "title2" + newsElement2.text());
-                            Log.v("title2","title3" +  title3);
-                            Log.v("title2","title4" +  title4);*/
-
-                            Elements imageElements = newsElement.select("div.thumb a img");
-                            String ImageUrl = imageElements.attr("src");
-
-                            Elements urlElements = newsElement.select("div.thumb a");
-
-                            String newsURL = urlElements.attr("href");
-
-                            if(title.equals("BASIC")) {
-                                searchWord.setNewsTitle("관련 뉴스 X");
+                        if (newsElement != null) { //기사에 이미지 있는 경우만 이미지 받아옴
+                            if(!newsElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                String temp = newsElement.get(0).select("div.thumb a img").attr("src");
+                                String s = newsElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                searchWord.setNewsImage(s);
                             }
                             else{
-                                searchWord.setNewsTitle(title);
-                                searchWord.setNewsURL(newsURL);
+                                searchWord.setNewsImage("NOIMAGE");
                             }
-                            searchWord.setNewsImage(ImageUrl.substring(0, ImageUrl.length()-28));
+
+                            Log.v("naver", newsElement.get(0).select("dl dt a").attr("href"));
+                            Log.v("naver", newsElement.get(0).select("dl dt a").text());
+
+                            searchWord.setNewsURL(newsElement.get(0).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL2(newsElement.get(1).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL3(newsElement.get(2).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL4(newsElement.get(3).select("dl dt a").attr("href"));
+
+                            searchWord.setNewsTitle(newsElement.get(0).select("dl dt a").text());
+                            searchWord.setNewsTitle2(newsElement.get(1).select("dl dt a").text());
+                            searchWord.setNewsTitle3(newsElement.get(2).select("dl dt a").text());
+                            searchWord.setNewsTitle4(newsElement.get(3).select("dl dt a").text());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -384,10 +371,10 @@ public class MainActivity extends AppCompatActivity {
         protected void onProgressUpdate(SearchWord... values) {
             myDataset.add(values[0]);
             mAdapter.notifyItemInserted(position++);
-            Log.v("datatest", values[0].getNumber() + ". " + values[0].getWord());
+
             ListAllBinding(Integer.parseInt(values[0].getNumber()));
 
-            if(Integer.parseInt(values[0].getNumber()) == 3){
+            if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
             }
 
@@ -415,10 +402,10 @@ public class MainActivity extends AppCompatActivity {
 
 
                 wordList.clear();
-                int count = mElements.size();
                 for (int i = 0; i < mElements.size(); i++) {
                     wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
                  }
+
 
                  for(int i = 0; i < mElements.size(); i++){
                      SearchWord searchWord = new SearchWord();
@@ -431,7 +418,22 @@ public class MainActivity extends AppCompatActivity {
                          Document mDocument2 = Jsoup.connect(url).get();
                          Elements newsElement = mDocument2.select("ul#clusterResultUL li");
 
-                         searchWord.setNewsImage(newsElement.get(0).select("div.wrap_thumb a img").attr("src"));
+                         try{
+                             String onlyImageURL = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                             Document onlyImageDocument = Jsoup.connect(onlyImageURL).get();
+                             Elements onlyImageElement = onlyImageDocument.select("div.news ul.type01>li");
+
+                             if(!onlyImageElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                 String temp = onlyImageElement.get(0).select("div.thumb a img").attr("src");
+                                 String s = onlyImageElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                 searchWord.setNewsImage(s);
+                             }
+                             else{
+                                 searchWord.setNewsImage("NOIMAGE");
+                             }
+                         }catch(Exception e){
+                             e.printStackTrace();
+                         }
 
                          searchWord.setNewsURL(newsElement.get(0).select("div.wrap_cont a").attr("href"));
                          searchWord.setNewsURL2(newsElement.get(1).select("div.wrap_cont a").attr("href"));
@@ -439,9 +441,9 @@ public class MainActivity extends AppCompatActivity {
                          searchWord.setNewsURL4(newsElement.get(3).select("div.wrap_cont a").attr("href"));
 
                          searchWord.setNewsTitle(newsElement.get(0).select("div.wrap_cont a.f_link_b").text());
-                         searchWord.setNewsTitle(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
-                         searchWord.setNewsTitle(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
-                         searchWord.setNewsTitle(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
+                         searchWord.setNewsTitle2(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
+                         searchWord.setNewsTitle3(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
+                         searchWord.setNewsTitle4(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
 
                      }catch(Exception e){
                          e.printStackTrace();
@@ -492,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
             Log.v("datatest", values[0].getNumber() + ". " + values[0].getWord());
             ListAllBinding(Integer.parseInt(values[0].getNumber()));
 
-            if(Integer.parseInt(values[0].getNumber()) == 3){
+            if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
             }
 
@@ -593,7 +595,7 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(MainActivity.this, DetailWeb.class);
                     intent.putExtra("newsURL", myDataset.get(0).getNewsURL());
                     intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
+                    intent.putExtra("allList", true); //리스트에서 선택한 것
                     intent.putExtra("currentNumber", 0);
                     startActivity(intent);
                     overridePendingTransition(R.anim.rightin, R.anim.notmove);
@@ -623,7 +625,7 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(MainActivity.this, DetailWeb.class);
                     intent.putExtra("newsURL", myDataset.get(2).getNewsURL());
                     intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
+                    intent.putExtra("allList", true); //리스트에서 선택한 것
                     intent.putExtra("currentNumber", 2);
                     startActivity(intent);
                     overridePendingTransition(R.anim.rightin, R.anim.notmove);

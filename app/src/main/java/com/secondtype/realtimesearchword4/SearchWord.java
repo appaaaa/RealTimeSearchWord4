@@ -11,8 +11,6 @@ public class SearchWord implements Serializable{
 
     private String number;
     private String word;
-    //    private String arrow;
-//    private String ranking;
     private String newsTitle;
     private String newsTitle2;
     private String newsTitle3;
