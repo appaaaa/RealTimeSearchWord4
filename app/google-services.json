@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "682067088393",
+    "firebase_url": "https://realtimesearchword.firebaseio.com",
+    "project_id": "realtimesearchword",
+    "storage_bucket": "realtimesearchword.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:682067088393:android:b07c6f98c9912950",
+        "android_client_info": {
+          "package_name": "com.secondtype.realtimesearchword3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "682067088393-nbtqqa7vmbc9quu67be1ukvp6n3m2tc5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.secondtype.realtimesearchword3",
+            "certificate_hash": "21d6c2e10b6b8f2709fcfe237564bb5c02b4c027"
+          }
+        },
+        {
+          "client_id": "682067088393-hofo2gjhkq1rga5594ufn7i2vdnjel74.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC90eTVbGDPVA7LOBjV0qDKzSubLj8RK00"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "682067088393-hofo2gjhkq1rga5594ufn7i2vdnjel74.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:682067088393:android:1b79ee2a689bb30d",
+        "android_client_info": {
+          "package_name": "com.secondtype.realtimesearchword4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "682067088393-kn9ivv5a1h88a393fhkellghesjaq4if.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.secondtype.realtimesearchword4",
+            "certificate_hash": "a1399d4867cdbadbfa8130c2958a30a1663db656"
+          }
+        },
+        {
+          "client_id": "682067088393-hofo2gjhkq1rga5594ufn7i2vdnjel74.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC90eTVbGDPVA7LOBjV0qDKzSubLj8RK00"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "682067088393-hofo2gjhkq1rga5594ufn7i2vdnjel74.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
