@@ -86,12 +86,44 @@ public class DetailWeb extends AppCompatActivity {
 
         animation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
 
+        Intent mIntent = getIntent();
+
+        if(mIntent.getSerializableExtra("mDataset") != null) {
+
+            mData.addAll((ArrayList<SearchWord>) getIntent().getSerializableExtra("mDataset"));
+        }
+
+        currentNum = mIntent.getIntExtra("currentNumber",1);
+
+        if(mIntent.getStringExtra("newsURL") != null) {
+
+            /// + check Case //////////////////
+            checkCase = mIntent.getBooleanExtra("allList", false);
+            if(checkCase){
+                mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + mData.get(currentNum).getWord() + "&sm=top_lve&ie=utf8";
+            }else {
+                mURL = mIntent.getStringExtra("newsURL");
+                //mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + mData.get(currentNum).getWord() + "&sm=top_lve&ie=utf8";
+            }
+            //////////////////////////////////
+            Log.v("URL ", checkCase + mURL);
+
+            openWeb(mURL);
+
+        }else{
+            Log.v("URL ", "null");
+        }
+
+        word1.setText(mData.get(currentNum).getNewsTitle2());
+        word2.setText(mData.get(currentNum).getNewsTitle3());
+        word3.setText(mData.get(currentNum).getNewsTitle4());
+
         word1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 Integer a = word1.getText().toString().indexOf(".");
-                String word = word1.getText().toString().substring(a+2, word1.getText().toString().length());
-                mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + word + "&sm=top_lve&ie=utf8";
+                String word = mData.get(currentNum).getNewsTitle2();
+                mURL = mData.get(currentNum).getNewsURL2();
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
@@ -101,8 +133,8 @@ public class DetailWeb extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Integer a = word2.getText().toString().indexOf(".");
-                String word = word2.getText().toString().substring(a+2, word2.getText().toString().length());
-                mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + word + "&sm=top_lve&ie=utf8";
+                String word = mData.get(currentNum).getNewsTitle3();
+                mURL = mData.get(currentNum).getNewsURL3();
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
@@ -112,8 +144,8 @@ public class DetailWeb extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Integer a = word3.getText().toString().indexOf(".");
-                String word = word3.getText().toString().substring(a+2, word3.getText().toString().length());
-                mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + word + "&sm=top_lve&ie=utf8";
+                String word = mData.get(currentNum).getNewsTitle4();
+                mURL = mData.get(currentNum).getNewsURL4();
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
@@ -142,19 +174,7 @@ public class DetailWeb extends AppCompatActivity {
 
 
 
-        Intent mIntent = getIntent();
-
-
-        if(mIntent.getSerializableExtra("mDataset") != null) {
-
-            mData.addAll((ArrayList<SearchWord>) getIntent().getSerializableExtra("mDataset"));
-        }
-
-
-
-
-
-        currentNum = mIntent.getIntExtra("currentNumber",1);
+/*        currentNum = mIntent.getIntExtra("currentNumber",1);
         if(currentNum != null) {
             Log.v("currentNum", currentNum.toString());
             String titleText = "\"" + mData.get(currentNum).getWord() + "\"" + " 관련 최신기사";
@@ -197,26 +217,9 @@ public class DetailWeb extends AppCompatActivity {
             word1.setText(w1);
             word2.setText(w2);
             word3.setText(w3);
-        }
+        }*/
 
-        if(mIntent.getStringExtra("newsURL") != null) {
 
-            /// + check Case //////////////////
-            checkCase = mIntent.getBooleanExtra("allList", false);
-            if(checkCase){
-                mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + mData.get(currentNum).getWord() + "&sm=top_lve&ie=utf8";
-            }else {
-                mURL = mIntent.getStringExtra("newsURL");
-                //mURL = "https://search.naver.com/search.naver?where=nexearch&query=" + mData.get(currentNum).getWord() + "&sm=top_lve&ie=utf8";
-            }
-            //////////////////////////////////
-            Log.v("URL ", checkCase + mURL);
-
-            openWeb(mURL);
-
-        }else{
-            Log.v("URL ", "null");
-        }
 
 
         mBackButton.setOnClickListener(new View.OnClickListener(){
@@ -227,11 +230,9 @@ public class DetailWeb extends AppCompatActivity {
             }
         });
 
-        startSubThread();
-
 
     }
-
+/*
     public void startSubThread(){
         MyRunnable myRunnable = new MyRunnable();
         Thread myThread = new Thread(myRunnable);
@@ -314,7 +315,7 @@ public class DetailWeb extends AppCompatActivity {
                 }
             }
         }
-    }
+    }*/
 
     public void openWeb(String murl){
         mWebView = (WebView)findViewById(R.id.webview);

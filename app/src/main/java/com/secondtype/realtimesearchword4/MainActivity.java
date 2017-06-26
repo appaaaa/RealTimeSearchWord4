@@ -200,16 +200,28 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 myDataset.clear();
                 switchs = false;
-                GetDataParser mParser = new GetDataParser(); // Asynctask는 1회용이라서 매번 다시 생성해줘야함
+                NaverParser mParser = new NaverParser(); // Asynctask는 1회용이라서 매번 다시 생성해줘야함
                 mParser.execute();
 
             }
         });
 
-        ////// + button naver, daum 추가
+        //// naver
         naverBtn = (Button)findViewById(R.id.button_naver);
         naverBtn.setTextSize(19);
         naverBtn.setTextColor(Color.parseColor("#00c73c"));
+
+        naverBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                daumBtn.setTextSize(16);
+                daumBtn.setTextColor(Color.parseColor("#000000"));
+                naverBtn.setTextSize(19);
+                naverBtn.setTextColor(Color.parseColor("#00c73c"));
+            }
+        });
+
+        //// daum
         daumBtn = (Button)findViewById(R.id.button_daum);
         daumBtn.setTextSize(16);
         daumBtn.setTextColor(Color.parseColor("#000000"));
@@ -223,17 +235,15 @@ public class MainActivity extends AppCompatActivity {
                 naverBtn.setTextColor(Color.parseColor("#000000"));
                 Toast toast = Toast.makeText(getApplicationContext(), "열심히 카페인을 들이부으며 준비중입니다.", Toast.LENGTH_SHORT);
                 toast.show();
+
+                myDataset.clear();
+                switchs = false;
+
+                DaumParser DParser = new DaumParser();
+                DParser.execute();
             }
         });
-        naverBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                daumBtn.setTextSize(16);
-                daumBtn.setTextColor(Color.parseColor("#000000"));
-                naverBtn.setTextSize(19);
-                naverBtn.setTextColor(Color.parseColor("#00c73c"));
-            }
-        });
+
         /////////////////////////////////////////////
 
         ////// + searchword만 따로 받아오기
@@ -245,12 +255,12 @@ public class MainActivity extends AppCompatActivity {
         //  contentLinearlayout.setClickable(false);
 
         myDataset.clear();
-        GetDataParser firstParser = new GetDataParser();
-        firstParser.execute( );
+        NaverParser NParser = new NaverParser();
+        NParser.execute( );
     }
 
 
-    public class GetDataParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
+    public class NaverParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
 
         String url = "http://datalab.naver.com/keyword/realtimeList.naver?where=main";
         Integer position = 0;
@@ -272,8 +282,6 @@ public class MainActivity extends AppCompatActivity {
                     wordList.add(mElements.get(i).select("span.title").text());
                 }
 
-
-                //////////////////////////////////
                 for(int i = 0; i < 20; i++) {
                     SearchWord searchWord = new SearchWord();
                     searchWord.setNumber(Integer.toString(i + 1));
@@ -391,6 +399,113 @@ public class MainActivity extends AppCompatActivity {
             mAdapter.notifyDataSetChanged();
         }
     }
+
+    public class DaumParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
+
+        String url = "http://www.daum.net";
+        Integer position = 0;
+
+        @Override
+        protected ArrayList<SearchWord> doInBackground(Void... params) {
+            ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
+
+            try{
+                Document mDocument = Jsoup.connect(url).get();
+                Elements mElements = mDocument.select("ol.list_hotissue li");
+
+
+                wordList.clear();
+                int count = mElements.size();
+                for (int i = 0; i < mElements.size(); i++) {
+                    wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
+                 }
+
+                 for(int i = 0; i < mElements.size(); i++){
+                     SearchWord searchWord = new SearchWord();
+                     searchWord.setNumber(Integer.toString(i + 1));
+                     searchWord.setWord(mElements.get(i).select("a[href]").get(0).text());
+
+                     String url = "http://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=" + searchWord.getWord();
+
+                     try{
+                         Document mDocument2 = Jsoup.connect(url).get();
+                         Elements newsElement = mDocument2.select("ul#clusterResultUL li");
+
+                         searchWord.setNewsImage(newsElement.get(0).select("div.wrap_thumb a img").attr("src"));
+
+                         searchWord.setNewsURL(newsElement.get(0).select("div.wrap_cont a").attr("href"));
+                         searchWord.setNewsURL2(newsElement.get(1).select("div.wrap_cont a").attr("href"));
+                         searchWord.setNewsURL3(newsElement.get(2).select("div.wrap_cont a").attr("href"));
+                         searchWord.setNewsURL4(newsElement.get(3).select("div.wrap_cont a").attr("href"));
+
+                         searchWord.setNewsTitle(newsElement.get(0).select("div.wrap_cont a.f_link_b").text());
+                         searchWord.setNewsTitle(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
+                         searchWord.setNewsTitle(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
+                         searchWord.setNewsTitle(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
+
+                     }catch(Exception e){
+                         e.printStackTrace();
+                     }
+
+                     try{
+                         String replysUrl = "http://search.daum.net/search?w=social&m=web&period=&sd=&ed=&sort_type=socialweb&nil_search=btn&enc=utf8&q=" + searchWord.getWord()+ "&DA=STC";
+
+                         Document mDocument3 = Jsoup.connect(replysUrl).get();
+                         Elements replyElements = mDocument3.select("ul.list_live li");
+
+                         for(int j = 0; j < replyElements.size(); j++){
+                             Reply mReply = new Reply();
+
+                             mReply.name = replyElements.get(j).select("div.wrap_tit a strong").text();
+                             mReply.text = replyElements.get(j).select("span.f_eb").text();
+                             mReply.count1 = replyElements.get(j).select("span.f_nb").text();
+                             mReply.count2 = replyElements.get(j).select("a.f_nb").get(0).text();
+                             mReply.count3 = "  ";
+
+                             searchWord.getReplyArrayList().add(mReply);
+                         }
+
+                     }catch (Exception e){
+                         e.printStackTrace();
+                     }
+                     publishProgress(searchWord);
+                 }
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            return tempList;
+        }
+
+
+        @Override
+        protected void onPreExecute() {
+            currentTimer();
+            loadingLayout.setVisibility(View.VISIBLE);
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(SearchWord... values) {
+            myDataset.add(values[0]);
+            mAdapter.notifyItemInserted(position++);
+            Log.v("datatest", values[0].getNumber() + ". " + values[0].getWord());
+            ListAllBinding(Integer.parseInt(values[0].getNumber()));
+
+            if(Integer.parseInt(values[0].getNumber()) == 3){
+                loadingLayout.setVisibility(View.GONE);
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<SearchWord> tempList) {
+            switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
+
 
     public void currentTimer(){
         long now = System.currentTimeMillis();
