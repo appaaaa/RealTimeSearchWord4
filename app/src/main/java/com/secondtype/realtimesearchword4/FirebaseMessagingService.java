@@ -1,5 +1,6 @@
 package com.secondtype.realtimesearchword4;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 public class FirebaseMessagingService extends com.google.firebase.messaging.FirebaseMessagingService {
     private static final String TAG = "FirebaseMsgService";
-
+    public static String Subscribe = "news";
     @Override
     public void onMessageReceived(RemoteMessage message)
     {
@@ -66,7 +67,9 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
                 .setContentText(body)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .setPriority(Notification.PRIORITY_MAX);
+
 
         if(bigPicture != null) {
 
