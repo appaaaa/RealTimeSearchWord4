@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Reply> replyList;
 
-
+    private String state = "NAVER"; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
 
 
     //////////// + tab 대신 임시 사용 //////////////
@@ -122,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> wordList;
     ////////////////////////////////////////////////////
 
+    public NaverParser NParser;  //네이버 asynctask
+    public DaumParser DParser; // 다음 asynctask
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,7 +143,6 @@ public class MainActivity extends AppCompatActivity {
         firstButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                mRecyclerView.setAdapter(mAdapter);
                 mRecyclerView.setVisibility(View.VISIBLE);
                 linearLayoutListAll.setVisibility(View.GONE);
             }
@@ -150,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
         secondButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                mAdapter.notifyDataSetChanged();
                 mRecyclerView.setVisibility(View.GONE);
                 linearLayoutListAll.setVisibility(View.VISIBLE);
             }
@@ -220,9 +221,12 @@ public class MainActivity extends AppCompatActivity {
                 naverBtn.setTextColor(Color.parseColor("#00c73c"));
 
                 myDataset.clear();
+                mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
+                state = "NAVER";
 
-                NaverParser NParser = new NaverParser();
+                DParser.cancel(true);
+                NParser = new NaverParser();
                 NParser.execute();
             }
         });
@@ -239,13 +243,17 @@ public class MainActivity extends AppCompatActivity {
                 daumBtn.setTextColor(Color.parseColor("#f1685e"));
                 naverBtn.setTextSize(16);
                 naverBtn.setTextColor(Color.parseColor("#000000"));
-                Toast toast = Toast.makeText(getApplicationContext(), "열심히 카페인을 들이부으며 준비중입니다.", Toast.LENGTH_SHORT);
+                Toast toast = Toast.makeText(getApplicationContext(), "다음 실시간 이슈 10개", Toast.LENGTH_SHORT);
                 toast.show();
 
                 myDataset.clear();
+                mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
+                state = "DAUM";
 
-                DaumParser DParser = new DaumParser();
+                NParser.cancel(true);
+
+                DParser = new DaumParser();
                 DParser.execute();
             }
         });
@@ -261,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
         //  contentLinearlayout.setClickable(false);
 
         myDataset.clear();
-        NaverParser NParser = new NaverParser();
+        NParser = new NaverParser();
         NParser.execute( );
     }
 
@@ -282,10 +290,17 @@ public class MainActivity extends AppCompatActivity {
                 ////// + list만 빨리 먼저 받아오기
                 wordList.clear();
                 for(int i = 0; i < 20; i++){
+                    if(NParser.isCancelled()){
+                        break;
+                    }
                     wordList.add(mElements.get(i).select("span.title").text());
+
                 }
 
                 for(int i = 0; i < mElements.size(); i++) {
+                    if(NParser.isCancelled()){
+                        break;
+                    }
                     SearchWord searchWord = new SearchWord();
                     searchWord.setNumber(Integer.toString(i + 1));
                     searchWord.setWord(mElements.get(i).select("span.title").text());
@@ -372,10 +387,13 @@ public class MainActivity extends AppCompatActivity {
             myDataset.add(values[0]);
             mAdapter.notifyItemInserted(position++);
 
-            ListAllBinding(Integer.parseInt(values[0].getNumber()));
+        //    ListAllBinding(Integer.parseInt(values[0].getNumber()));
 
             if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
+                for(int i = 0; i < wordList.size(); i++){
+                    ListAllBinding(i+1);
+                }
             }
 
         }
@@ -400,14 +418,18 @@ public class MainActivity extends AppCompatActivity {
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("ol.list_hotissue li");
 
-
                 wordList.clear();
-                for (int i = 0; i < mElements.size(); i++) {
+                for (int i = 0; i < 10; i++) {
+                    if(DParser.isCancelled()){
+                        break;
+                    }
                     wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
                  }
 
-
-                 for(int i = 0; i < mElements.size(); i++){
+                 for(int i = 0; i < 10; i++){
+                     if(DParser.isCancelled()){
+                         break;
+                     }
                      SearchWord searchWord = new SearchWord();
                      searchWord.setNumber(Integer.toString(i + 1));
                      searchWord.setWord(mElements.get(i).select("a[href]").get(0).text());
@@ -492,10 +514,14 @@ public class MainActivity extends AppCompatActivity {
             myDataset.add(values[0]);
             mAdapter.notifyItemInserted(position++);
             Log.v("datatest", values[0].getNumber() + ". " + values[0].getWord());
-            ListAllBinding(Integer.parseInt(values[0].getNumber()));
+            //ListAllBinding(Integer.parseInt(values[0].getNumber()));
 
             if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
+
+                for(int i = 0; i < wordList.size(); i++){
+                    ListAllBinding(i+1);
+                }
             }
 
         }
@@ -588,17 +614,312 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
 
+
+//        listAllText1.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(0).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true); //리스트에서 선택한 것
+//                    intent.putExtra("currentNumber", 0);
+//                 //   intent.putExtra("state", state);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText2.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //if(myDataset.size()>=1) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(1).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 1);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText3.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //if(myDataset.size()>=2) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(2).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true); //리스트에서 선택한 것
+//                    intent.putExtra("currentNumber", 2);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText4.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //if(myDataset.size()>=3) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(3).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 3);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText5.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=4) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(4).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 4);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText6.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //  if(myDataset.size()>=5) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(5).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 5);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText7.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=6) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(6).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 6);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText8.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                if(switchs) {
+//                    // if(myDataset.size()>=7) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(7).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 7);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText9.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=8) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(8).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 8);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText10.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=9) {
+//                if(switchs) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(9).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 9);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText11.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //  if(myDataset.size()>=10) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(10).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 10);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText12.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //  if(myDataset.size()>=11) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(11).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 11);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText13.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=12) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(12).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 12);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText14.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=13) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(13).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 13);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText15.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=14) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(14).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 14);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText16.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=15) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(15).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 15);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText17.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=16) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(16).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 16);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText18.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                // if(myDataset.size()>=17) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(17).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 17);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText19.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //  if(myDataset.size()>=18) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(18).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 18);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
+//        listAllText20.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                //  if(myDataset.size()>=19) {
+//                if(switchs && state.equals("NAVER")) {
+//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+//                    intent.putExtra("newsURL", myDataset.get(19).getNewsURL());
+//                    intent.putExtra("mDataset", myDataset);
+//                    intent.putExtra("allList", true);
+//                    intent.putExtra("currentNumber", 19);
+//                    startActivity(intent);
+//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+//                }
+//            }
+//        });
         listAllText1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(0).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true); //리스트에서 선택한 것
-                    intent.putExtra("currentNumber", 0);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(0);
                 }
             }
         });
@@ -606,14 +927,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //if(myDataset.size()>=1) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(1).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 1);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(1);
                 }
             }
         });
@@ -621,14 +936,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //if(myDataset.size()>=2) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(2).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true); //리스트에서 선택한 것
-                    intent.putExtra("currentNumber", 2);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(2);
                 }
             }
         });
@@ -636,14 +945,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //if(myDataset.size()>=3) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(3).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 3);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(3);
                 }
             }
         });
@@ -651,14 +954,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=4) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(4).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 4);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(4);
                 }
             }
         });
@@ -666,14 +963,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //  if(myDataset.size()>=5) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(5).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 5);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(5);
                 }
             }
         });
@@ -681,29 +972,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=6) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(6).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 6);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(6);
                 }
             }
         });
         listAllText8.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if(myDataset.size()==20) {
-                    // if(myDataset.size()>=7) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(7).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 7);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(7);
                 }
             }
         });
@@ -711,14 +989,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=8) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(8).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 8);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(8);
                 }
             }
         });
@@ -726,14 +998,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=9) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(9).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 9);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs) {
+                    IntentList(9);
                 }
             }
         });
@@ -741,14 +1007,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //  if(myDataset.size()>=10) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(10).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 10);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(10);
                 }
             }
         });
@@ -756,14 +1016,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //  if(myDataset.size()>=11) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(11).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 11);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(11);
                 }
             }
         });
@@ -771,14 +1025,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=12) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(12).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 12);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(12);
                 }
             }
         });
@@ -786,14 +1034,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=13) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(13).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 13);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(13);
                 }
             }
         });
@@ -801,14 +1043,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=14) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(14).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 14);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(14);
                 }
             }
         });
@@ -816,14 +1052,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=15) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(15).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 15);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(15);
                 }
             }
         });
@@ -831,14 +1061,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=16) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(16).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 16);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(16);
                 }
             }
         });
@@ -846,14 +1070,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if(myDataset.size()>=17) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(17).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 17);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(17);
                 }
             }
         });
@@ -861,14 +1079,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //  if(myDataset.size()>=18) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(18).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 18);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(18);
                 }
             }
         });
@@ -876,17 +1088,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //  if(myDataset.size()>=19) {
-                if(myDataset.size()==20) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-                    intent.putExtra("newsURL", myDataset.get(19).getNewsURL());
-                    intent.putExtra("mDataset", myDataset);
-                    intent.putExtra("allList", true);
-                    intent.putExtra("currentNumber", 19);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
+                if(switchs && state.equals("NAVER")) {
+                    IntentList(19);
                 }
             }
         });
+    }
+
+    public void IntentList(Integer i){
+        Intent intent = new Intent(MainActivity.this, DetailWeb.class);
+        intent.putExtra("newsURL", myDataset.get(i).getNewsURL());
+        intent.putExtra("mDataset", myDataset);
+        intent.putExtra("allList", true);
+        intent.putExtra("currentNumber", i);
+        intent.putExtra("state", state);
+        startActivity(intent);
+        overridePendingTransition(R.anim.rightin, R.anim.notmove);
     }
 }
 

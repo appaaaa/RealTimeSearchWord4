@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class FirebaseMessagingService extends com.google.firebase.messaging.FirebaseMessagingService {
     private static final String TAG = "FirebaseMsgService";
-    public static String Subscribe = "news";
+    public static String Subscribe = "newstest";
     @Override
     public void onMessageReceived(RemoteMessage message)
     {

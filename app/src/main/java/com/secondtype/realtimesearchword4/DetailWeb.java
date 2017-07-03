@@ -71,6 +71,7 @@ public class DetailWeb extends AppCompatActivity {
     /////////////////////////////////////////
 
     Boolean isList = false;
+    String state = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,18 +97,29 @@ public class DetailWeb extends AppCompatActivity {
 
         currentNum = mIntent.getIntExtra("currentNumber",1);
 
-        openWeb(mData.get(currentNum).getNewsURL()); //처음 뉴스화면
+
 
         word1.setText(mData.get(currentNum).getNewsTitle2());
         word2.setText(mData.get(currentNum).getNewsTitle3());
         word3.setText(mData.get(currentNum).getNewsTitle4());
 
         isList = mIntent.getBooleanExtra("allList", false);
+        state = mIntent.getStringExtra("state");
 
         if(isList){ //리스트를 클릭해서 넘어온 거면 검색보여주기
+            String url = "";
+
+            if(state.equals("NAVER")) {
+                url = "https://search.naver.com/search.naver?where=nexearch&sm=tab_lve&ie=utf8&query=";
+
+            }else if(state.equals("DAUM")){
+                url = "http://search.daum.net/search?w=tot&DA=1TH&rtmaxcoll=1TH&q=";
+            }
+            url = url + mData.get(currentNum).getWord();
+            openWeb(url);
 
         }else{ //카드에서 넘어온거면 기사 보여주기
-
+            openWeb(mData.get(currentNum).getNewsURL()); //처음 뉴스화면
         }
 
         word1.setOnClickListener(new View.OnClickListener(){
