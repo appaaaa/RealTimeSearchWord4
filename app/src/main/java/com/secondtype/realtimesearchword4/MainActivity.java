@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private ArrayList<SearchWord> myDataset;
+    private ArrayList<SearchWord> daumDataset;
 
     private LinearLayout loadingLayout;
     private TextView loadingTime;
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Reply> replyList;
 
     private String state = "NAVER"; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
+    private Integer click = 1;
 
 
     //////////// + tab 대신 임시 사용 //////////////
@@ -194,6 +196,8 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new SearchWordAdapter(getApplication(),myDataset, MainActivity.this);
         mRecyclerView.setAdapter(mAdapter);
 
+        daumDataset = new ArrayList<>();
+
 
         refreshBtn = (Button)findViewById(R.id.button_refresh);
         refreshBtn.setOnClickListener(new View.OnClickListener(){
@@ -220,12 +224,23 @@ public class MainActivity extends AppCompatActivity {
                 naverBtn.setTextSize(19);
                 naverBtn.setTextColor(Color.parseColor("#00c73c"));
 
+
+                if(DParser != null && !DParser.isCancelled()){
+                    DParser.cancel(true);
+                    Log.v("appaaaa", "DParser cancel");
+                }
+                if(NParser != null && !NParser.isCancelled()){
+                    NParser.cancel(true);
+                    Log.v("appaaaa", "NParser cancel");
+                }
+
+                click = 2;
+
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
                 state = "NAVER";
 
-                DParser.cancel(true);
                 NParser = new NaverParser();
                 NParser.execute();
             }
@@ -246,12 +261,24 @@ public class MainActivity extends AppCompatActivity {
                 Toast toast = Toast.makeText(getApplicationContext(), "다음 실시간 이슈 10개", Toast.LENGTH_SHORT);
                 toast.show();
 
+
+                if(DParser != null && !DParser.isCancelled()){
+                    DParser.cancel(true);
+                    Log.v("appaaaa", "DParser cancel");
+                }
+                if(NParser != null && !NParser.isCancelled()){
+                    NParser.cancel(true);
+                    Log.v("appaaaa", "NParser cancel");
+                }
+
+                click = 2;
+
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
                 state = "DAUM";
 
-                NParser.cancel(true);
+
 
                 DParser = new DaumParser();
                 DParser.execute();
@@ -287,20 +314,25 @@ public class MainActivity extends AppCompatActivity {
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("div.select_date ul li");
 
+                myDataset.clear();
                 ////// + list만 빨리 먼저 받아오기
                 wordList.clear();
                 for(int i = 0; i < 20; i++){
                     if(NParser.isCancelled()){
-                        break;
+                        Log.v("appaaaa", "break1 : " + i);
+                        return null;
                     }
                     wordList.add(mElements.get(i).select("span.title").text());
+                    //Log.v("appaaaa", "반복문1 : " + i);
 
                 }
 
                 for(int i = 0; i < mElements.size(); i++) {
                     if(NParser.isCancelled()){
-                        break;
+                        Log.v("appaaaa", "naver break2 : " + i);
+                        return null;
                     }
+                    Log.v("appaaaa", "naver 반복문2 : " + i);
                     SearchWord searchWord = new SearchWord();
                     searchWord.setNumber(Integer.toString(i + 1));
                     searchWord.setWord(mElements.get(i).select("span.title").text());
@@ -321,8 +353,6 @@ public class MainActivity extends AppCompatActivity {
                                 searchWord.setNewsImage("NOIMAGE");
                             }
 
-                            Log.v("naver", newsElement.get(0).select("dl dt a").attr("href"));
-                            Log.v("naver", newsElement.get(0).select("dl dt a").text());
 
                             searchWord.setNewsURL(newsElement.get(0).select("dl dt a").attr("href"));
                             searchWord.setNewsURL2(newsElement.get(1).select("dl dt a").attr("href"));
@@ -345,6 +375,11 @@ public class MainActivity extends AppCompatActivity {
                         Elements replyElements = mDocument3.select("ul.type01 li");
 
                         for(int j = 0; j < replyElements.size(); j++){
+                            if(NParser.isCancelled()){
+                                Log.v("appaaaa", "naver break3 : " + j);
+                                return null;
+                            }
+                            //Log.v("naver appaaaa", "반복문3 : " + j);
                             Reply mReply = new Reply();
                             mReply.name = replyElements.get(j).select(".user_name").text();
 
@@ -379,6 +414,18 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             currentTimer();
             loadingLayout.setVisibility(View.VISIBLE);
+            click = 1;
+            listAllText11.setVisibility(View.VISIBLE);
+            listAllText12.setVisibility(View.VISIBLE);
+            listAllText13.setVisibility(View.VISIBLE);
+            listAllText14.setVisibility(View.VISIBLE);
+            listAllText15.setVisibility(View.VISIBLE);
+            listAllText16.setVisibility(View.VISIBLE);
+            listAllText17.setVisibility(View.VISIBLE);
+            listAllText18.setVisibility(View.VISIBLE);
+            listAllText19.setVisibility(View.VISIBLE);
+            listAllText20.setVisibility(View.VISIBLE);
+
             super.onPreExecute();
         }
 
@@ -418,18 +465,23 @@ public class MainActivity extends AppCompatActivity {
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("ol.list_hotissue li");
 
+                myDataset.clear();
                 wordList.clear();
                 for (int i = 0; i < 10; i++) {
                     if(DParser.isCancelled()){
-                        break;
+                        Log.v("appaaaa", "daum break1 : " + i);
+                        return null;
                     }
                     wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
+                    //Log.v("appaaaa", "daum 반복문1 : " + i);
                  }
 
                  for(int i = 0; i < 10; i++){
                      if(DParser.isCancelled()){
-                         break;
+                         Log.v("appaaaa", "daum break2 : " + i);
+                         return null;
                      }
+                     Log.v("appaaaa", "daum 반복문2 : " + i);
                      SearchWord searchWord = new SearchWord();
                      searchWord.setNumber(Integer.toString(i + 1));
                      searchWord.setWord(mElements.get(i).select("a[href]").get(0).text());
@@ -478,6 +530,11 @@ public class MainActivity extends AppCompatActivity {
                          Elements replyElements = mDocument3.select("ul.list_live li");
 
                          for(int j = 0; j < replyElements.size(); j++){
+                             if(DParser.isCancelled()){
+                                 Log.v("appaaaa", "daum break3 : " + j);
+                                 return null;
+                             }
+                             //Log.v("appaaaa", "daum 반복문3 : " + j);
                              Reply mReply = new Reply();
 
                              mReply.name = replyElements.get(j).select("div.wrap_tit a strong").text();
@@ -506,6 +563,16 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             currentTimer();
             loadingLayout.setVisibility(View.VISIBLE);
+            listAllText11.setVisibility(View.GONE);
+            listAllText12.setVisibility(View.GONE);
+            listAllText13.setVisibility(View.GONE);
+            listAllText14.setVisibility(View.GONE);
+            listAllText15.setVisibility(View.GONE);
+            listAllText16.setVisibility(View.GONE);
+            listAllText17.setVisibility(View.GONE);
+            listAllText18.setVisibility(View.GONE);
+            listAllText19.setVisibility(View.GONE);
+            listAllText20.setVisibility(View.GONE);
             super.onPreExecute();
         }
 
@@ -513,7 +580,6 @@ public class MainActivity extends AppCompatActivity {
         protected void onProgressUpdate(SearchWord... values) {
             myDataset.add(values[0]);
             mAdapter.notifyItemInserted(position++);
-            Log.v("datatest", values[0].getNumber() + ". " + values[0].getWord());
             //ListAllBinding(Integer.parseInt(values[0].getNumber()));
 
             if(Integer.parseInt(values[0].getNumber()) == 2){
@@ -550,7 +616,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void ListAllBinding(int num){
-        Log.v("binding", Integer.toString(num));
         switch(num){
             case 1:
                 listAllText1.setText("1. " + wordList.get(0));
