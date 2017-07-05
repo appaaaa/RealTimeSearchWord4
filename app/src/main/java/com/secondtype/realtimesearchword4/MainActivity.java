@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -76,13 +77,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Reply> replyList;
 
     private String state = "NAVER"; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
+    private boolean isAllList = false;
     private Integer click = 1;
 
-
-    //////////// + tab 대신 임시 사용 //////////////
-    private ImageButton firstButton;
-    private ImageButton secondButton;
-    /////////////////////////////////////////////
 
     ////////////////// + list all ////////////////
     LinearLayout linearLayoutListAll;
@@ -118,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
     ////// + button naver, daum 추가
     Button naverBtn;
     Button daumBtn;
+    FloatingActionButton fab;
     ////////////////////////////////
 
     ////// + searchword 만 따로 받아오기. 리스트 표시용
@@ -140,25 +138,22 @@ public class MainActivity extends AppCompatActivity {
         loadingTime = (TextView)findViewById(R.id.textview_starttime);
         titleTime = (TextView)findViewById(R.id.textview_title);
 
-        ///////////////tab 대신 임시사용 ///////////////////
-        firstButton = (ImageButton) findViewById(R.id.button_first);
-        firstButton.setOnClickListener(new View.OnClickListener(){
+        fab = (FloatingActionButton)findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View view) {
-                mRecyclerView.setVisibility(View.VISIBLE);
-                linearLayoutListAll.setVisibility(View.GONE);
+            public void onClick(View v) {
+                if(!isAllList){ //현재 카드보기면 검색어 리스트로 바꿈
+                    isAllList = true;
+                    mRecyclerView.setVisibility(View.GONE);
+                    linearLayoutListAll.setVisibility(View.VISIBLE);
+                }else{ //현재 검색어 리스트면 카드보기로 바꿈
+                    isAllList = false;
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                    linearLayoutListAll.setVisibility(View.GONE);
+                }
             }
         });
 
-        secondButton = (ImageButton) findViewById(R.id.button_second);
-        secondButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                mRecyclerView.setVisibility(View.GONE);
-                linearLayoutListAll.setVisibility(View.VISIBLE);
-            }
-        });
-        ////////////////////////////////////////////////////
 
         /////////////////// + listview list all /////////////
         linearLayoutListAll = (LinearLayout)findViewById(R.id.linearlayout_listall);
@@ -223,7 +218,8 @@ public class MainActivity extends AppCompatActivity {
                 daumBtn.setTextColor(Color.parseColor("#000000"));
                 naverBtn.setTextSize(19);
                 naverBtn.setTextColor(Color.parseColor("#00c73c"));
-
+                mRecyclerView.setVisibility(View.VISIBLE);
+                linearLayoutListAll.setVisibility(View.GONE);
 
                 if(DParser != null && !DParser.isCancelled()){
                     DParser.cancel(true);
@@ -258,6 +254,8 @@ public class MainActivity extends AppCompatActivity {
                 daumBtn.setTextColor(Color.parseColor("#f1685e"));
                 naverBtn.setTextSize(16);
                 naverBtn.setTextColor(Color.parseColor("#000000"));
+                mRecyclerView.setVisibility(View.VISIBLE);
+                linearLayoutListAll.setVisibility(View.GONE);
                 Toast toast = Toast.makeText(getApplicationContext(), "다음 실시간 이슈 10개", Toast.LENGTH_SHORT);
                 toast.show();
 
