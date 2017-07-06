@@ -397,7 +397,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|end"
                 android:layout_margin="10dp"
-                android:src="@android:drawable/ic_menu_agenda" />
+                android:src="@drawable/format_float_center"
+                />
 
 
         </FrameLayout>
