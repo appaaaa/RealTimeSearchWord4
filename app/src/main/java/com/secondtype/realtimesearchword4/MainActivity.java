@@ -44,6 +44,9 @@ import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.kakao.kakaolink.KakaoLink;
+import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
+import com.kakao.util.KakaoParameterException;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -125,6 +128,29 @@ public class MainActivity extends AppCompatActivity {
     public NaverParser NParser;  //네이버 asynctask
     public DaumParser DParser; // 다음 asynctask
 
+    public void shareKakao(View v)
+    {
+        try{
+            final KakaoLink kakaoLink = KakaoLink.getKakaoLink(this);
+            final KakaoTalkLinkMessageBuilder kakaoBuilder = kakaoLink.createKakaoTalkLinkMessageBuilder();
+
+            // 메시지 추가
+            kakaoBuilder.addText("카카오링크 테스트");
+
+            // 이미지 가로/세로 사이즈는 80px 보다 커야하며, 이미지 용량은 500kb 이하로 제한된다.
+            String url = "http://res.heraldm.com/phpwas/restmb_jhidxmake.php?idx=5&simg=201707082036382401607_20170708211509_01.jpg";
+            kakaoBuilder.addImage(url, 1080, 1920);
+
+            // 앱 실행버튼 추가
+            kakaoBuilder.addAppButton("앱 실행");
+
+            // 메시지 발송
+            kakaoLink.sendMessage(kakaoBuilder, this);
+        }catch (KakaoParameterException e){
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseMessaging.getInstance().subscribeToTopic(FirebaseMessagingService.Subscribe);
         FirebaseInstanceId.getInstance().getToken();
-
 
         loadingLayout = (LinearLayout)findViewById(R.id.linearlayout_loading);
         loadingTime = (TextView)findViewById(R.id.textview_starttime);
