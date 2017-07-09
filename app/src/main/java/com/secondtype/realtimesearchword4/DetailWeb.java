@@ -116,10 +116,12 @@ public class DetailWeb extends AppCompatActivity {
                 url = "http://search.daum.net/search?w=tot&DA=1TH&rtmaxcoll=1TH&q=";
             }
             url = url + mData.get(currentNum).getWord();
+            mTitleTextView.setText(mData.get(currentNum).getWord() + " 최신검색");
             openWeb(url);
 
         }else{ //카드에서 넘어온거면 기사 보여주기
             openWeb(mData.get(currentNum).getNewsURL()); //처음 뉴스화면
+            mTitleTextView.setText((mData.get(currentNum).getWord() + " 최신기사"));
         }
 
         word1.setOnClickListener(new View.OnClickListener(){

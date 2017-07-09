@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     //test git
     // test 2 git
     //branch change
-    Button refreshBtn;
+
 
     public static Boolean switchs = false;
 
@@ -125,6 +125,8 @@ public class MainActivity extends AppCompatActivity {
     public NaverParser NParser;  //네이버 asynctask
     public DaumParser DParser; // 다음 asynctask
 
+    public boolean cancelFinish = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -146,10 +148,12 @@ public class MainActivity extends AppCompatActivity {
                     isAllList = true;
                     mRecyclerView.setVisibility(View.GONE);
                     linearLayoutListAll.setVisibility(View.VISIBLE);
+                    fab.setImageResource(R.drawable.ic_video_label_white_24px);
                 }else{ //현재 검색어 리스트면 카드보기로 바꿈
                     isAllList = false;
                     mRecyclerView.setVisibility(View.VISIBLE);
                     linearLayoutListAll.setVisibility(View.GONE);
+                    fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
                 }
             }
         });
@@ -193,19 +197,6 @@ public class MainActivity extends AppCompatActivity {
 
         daumDataset = new ArrayList<>();
 
-
-        refreshBtn = (Button)findViewById(R.id.button_refresh);
-        refreshBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                myDataset.clear();
-                switchs = false;
-                NaverParser mParser = new NaverParser(); // Asynctask는 1회용이라서 매번 다시 생성해줘야함
-                mParser.execute();
-
-            }
-        });
-
         //// naver
         naverBtn = (Button)findViewById(R.id.button_naver);
         naverBtn.setTextSize(19);
@@ -220,25 +211,37 @@ public class MainActivity extends AppCompatActivity {
                 naverBtn.setTextColor(Color.parseColor("#00c73c"));
                 mRecyclerView.setVisibility(View.VISIBLE);
                 linearLayoutListAll.setVisibility(View.GONE);
+                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
 
-                if(DParser != null && !DParser.isCancelled()){
+                if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
                     DParser.cancel(true);
                     Log.v("appaaaa", "DParser cancel");
                 }
-                if(NParser != null && !NParser.isCancelled()){
+                if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
                     NParser.cancel(true);
-                    Log.v("appaaaa", "NParser cancel");
+                    Log.v("appaaaa", "NParser cancel in button");
+
+                    try{
+                        Thread.sleep(500);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                 }
 
                 click = 2;
+
 
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
                 state = "NAVER";
 
+
                 NParser = new NaverParser();
                 NParser.execute();
+
+
             }
         });
 
@@ -256,30 +259,38 @@ public class MainActivity extends AppCompatActivity {
                 naverBtn.setTextColor(Color.parseColor("#000000"));
                 mRecyclerView.setVisibility(View.VISIBLE);
                 linearLayoutListAll.setVisibility(View.GONE);
+                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
                 Toast toast = Toast.makeText(getApplicationContext(), "다음 실시간 이슈 10개", Toast.LENGTH_SHORT);
                 toast.show();
 
 
-                if(DParser != null && !DParser.isCancelled()){
+                if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
                     DParser.cancel(true);
-                    Log.v("appaaaa", "DParser cancel");
+                    Log.v("appaaaa", "DParser cancel in button");
+                    try{
+                        Thread.sleep(500);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                 }
-                if(NParser != null && !NParser.isCancelled()){
+                if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
                     NParser.cancel(true);
                     Log.v("appaaaa", "NParser cancel");
                 }
 
                 click = 2;
 
+
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
                 state = "DAUM";
 
-
-
                 DParser = new DaumParser();
                 DParser.execute();
+
+
             }
         });
 
@@ -307,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected ArrayList<SearchWord> doInBackground(Void... voids) {
             ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
-
+            cancelFinish = false;
             try{
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("div.select_date ul li");
@@ -447,6 +458,14 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
             mAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void onCancelled() {
+            Log.v("appaaaa", "onCancelled()1");
+            super.onCancelled();
+            Log.v("appaaaa", "onCancelled()2");
+            cancelFinish = true;
         }
     }
 
@@ -1167,6 +1186,18 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("state", state);
         startActivity(intent);
         overridePendingTransition(R.anim.rightin, R.anim.notmove);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if(NParser.getStatus() == AsyncTask.Status.RUNNING){
+            NParser.cancel(true);
+        }
+        if(DParser.getStatus() == AsyncTask.Status.RUNNING){
+            DParser.cancel(true);
+        }
     }
 }
 
