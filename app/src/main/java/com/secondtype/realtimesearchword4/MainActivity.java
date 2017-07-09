@@ -125,7 +125,28 @@ public class MainActivity extends AppCompatActivity {
     public NaverParser NParser;  //네이버 asynctask
     public DaumParser DParser; // 다음 asynctask
 
-    public boolean cancelFinish = false;
+    public void shareKakao(View v)
+    {
+        try{
+            final KakaoLink kakaoLink = KakaoLink.getKakaoLink(this);
+            final KakaoTalkLinkMessageBuilder kakaoBuilder = kakaoLink.createKakaoTalkLinkMessageBuilder();
+
+            // 메시지 추가
+            kakaoBuilder.addText("카카오링크 테스트");
+
+            // 이미지 가로/세로 사이즈는 80px 보다 커야하며, 이미지 용량은 500kb 이하로 제한된다.
+            String url = "http://res.heraldm.com/phpwas/restmb_jhidxmake.php?idx=5&simg=201707082036382401607_20170708211509_01.jpg";
+            kakaoBuilder.addImage(url, 1080, 1920);
+
+            // 앱 실행버튼 추가
+            kakaoBuilder.addAppButton("앱 실행");
+
+            // 메시지 발송
+            kakaoLink.sendMessage(kakaoBuilder, this);
+        }catch (KakaoParameterException e){
+            e.printStackTrace();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -231,17 +252,13 @@ public class MainActivity extends AppCompatActivity {
 
                 click = 2;
 
-
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
                 state = "NAVER";
 
-
                 NParser = new NaverParser();
                 NParser.execute();
-
-
             }
         });
 
@@ -281,7 +298,6 @@ public class MainActivity extends AppCompatActivity {
 
                 click = 2;
 
-
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
@@ -289,8 +305,6 @@ public class MainActivity extends AppCompatActivity {
 
                 DParser = new DaumParser();
                 DParser.execute();
-
-
             }
         });
 
@@ -318,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected ArrayList<SearchWord> doInBackground(Void... voids) {
             ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
-            cancelFinish = false;
+
             try{
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("div.select_date ul li");
@@ -458,14 +472,6 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
             mAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        protected void onCancelled() {
-            Log.v("appaaaa", "onCancelled()1");
-            super.onCancelled();
-            Log.v("appaaaa", "onCancelled()2");
-            cancelFinish = true;
         }
     }
 

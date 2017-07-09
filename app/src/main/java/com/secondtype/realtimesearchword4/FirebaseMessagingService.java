@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class FirebaseMessagingService extends com.google.firebase.messaging.FirebaseMessagingService {
     private static final String TAG = "FirebaseMsgService";
-    public static String Subscribe = "newstest";
+    public static String Subscribe = "news";
     @Override
     public void onMessageReceived(RemoteMessage message)
     {
@@ -62,13 +62,15 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
         NotificationCompat.Builder notificationBuilder;
 
         notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent)
-                .setPriority(Notification.PRIORITY_MAX);
+                .setPriority(Notification.PRIORITY_MAX)
+                .setColor(0xff000000)
+                .setSmallIcon(R.drawable.ic_notification_icon2)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.image_icon));
 
 
         if(bigPicture != null) {
