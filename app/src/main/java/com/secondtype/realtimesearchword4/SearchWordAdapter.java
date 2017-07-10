@@ -3,12 +3,14 @@ package com.secondtype.realtimesearchword4;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -176,9 +178,12 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
 
                 replyListViewAdapter.notifyDataSetChanged();
 
-                final AlertDialog listViewDialog = new AlertDialog.Builder(mMainActivity).create();
+                final AlertDialog listViewDialog = new AlertDialog.Builder(mMainActivity, R.style.YourDialogTheme).create();
+
+
                 listViewDialog.setView(view);
                 listViewDialog.show();
+
 
                 ///////// + reply back button ////////////////////////////
                 replyBack.setOnClickListener(new View.OnClickListener(){
@@ -204,7 +209,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
 
                 replyListViewAdapter.notifyDataSetChanged();
 
-                final AlertDialog listViewDialog = new AlertDialog.Builder(mMainActivity).create();
+                final AlertDialog listViewDialog = new AlertDialog.Builder(mMainActivity, R.style.YourDialogTheme).create();
                 listViewDialog.setView(view);
                 listViewDialog.show();
 
