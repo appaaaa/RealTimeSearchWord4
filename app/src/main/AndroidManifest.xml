@@ -26,7 +26,8 @@
                     android:host="@string/kakaolink_host"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.secondtype.realtimesearchword4.DetailWeb"></activity>
+        <activity android:name="com.secondtype.realtimesearchword4.DetailWeb">
+        </activity>
 
         <meta-data android:name="com.kakao.sdk.AppKey"
             android:value="@string/kakao_app_key"/>
