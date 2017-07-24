@@ -158,7 +158,10 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                     mMainActivity.overridePendingTransition(R.anim.rightin, R.anim.notmove);
                 }
                 else if(MainActivity.switchs == false){
-                    Toast toast = Toast.makeText(mMainActivity, "데이터로딩중.. 데이터 로딩이 전부 끝나면 이동가능합니다.", Toast.LENGTH_SHORT);
+                    Toast toast = null;
+                    if(toast == null){
+                        toast = Toast.makeText(mMainActivity, "데이터로딩중.. 데이터 로딩이 전부 끝나면 이동가능합니다.", Toast.LENGTH_SHORT);
+                    }
                     toast.show();
                 }
             }

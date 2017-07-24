@@ -17,6 +17,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -77,7 +78,7 @@ public class DetailWeb extends AppCompatActivity {
 
 
     ////// + button share edit : title button
-    Button shareBtn;
+    ImageButton shareBtn;
     Button editBtn;
     /////////////////////////////////////////
 
@@ -213,7 +214,7 @@ public class DetailWeb extends AppCompatActivity {
         });
 
         ////// + button share, edit : title button
-        shareBtn = (Button)findViewById(R.id.button_share);
+        shareBtn = (ImageButton)findViewById(R.id.button_share);
         shareBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -222,14 +223,14 @@ public class DetailWeb extends AppCompatActivity {
 //                toast.show();
             }
         });
-        editBtn = (Button)findViewById(R.id.button_edit);
-        editBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                Toast toast = Toast.makeText(getApplicationContext(), "사실 이건 아직 별로 쓸데가 없어서... 원하는게 있으면 연락주세요! appaaaa@naver.com", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        });
+//        editBtn = (Button)findViewById(R.id.button_edit);
+//        editBtn.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view) {
+//                Toast toast = Toast.makeText(getApplicationContext(), "사실 이건 아직 별로 쓸데가 없어서... 원하는게 있으면 연락주세요! appaaaa@naver.com", Toast.LENGTH_SHORT);
+//                toast.show();
+//            }
+//        });
         ////////////////////////////////////////////
 
 

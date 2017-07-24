@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -417,6 +418,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             currentTimer();
             loadingLayout.setVisibility(View.VISIBLE);
+
             click = 1;
             listAllText11.setVisibility(View.VISIBLE);
             listAllText12.setVisibility(View.VISIBLE);
@@ -441,6 +443,7 @@ public class MainActivity extends AppCompatActivity {
 
             if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
+
                 for(int i = 0; i < wordList.size(); i++){
                     ListAllBinding(i+1);
                 }
@@ -566,6 +569,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             currentTimer();
             loadingLayout.setVisibility(View.VISIBLE);
+
             listAllText11.setVisibility(View.GONE);
             listAllText12.setVisibility(View.GONE);
             listAllText13.setVisibility(View.GONE);
@@ -584,6 +588,9 @@ public class MainActivity extends AppCompatActivity {
             myDataset.add(values[0]);
             mAdapter.notifyItemInserted(position++);
             //ListAllBinding(Integer.parseInt(values[0].getNumber()));
+            if(loadingLayout.getVisibility() == View.VISIBLE){
+                currentTimer();
+            }
 
             if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
@@ -601,7 +608,6 @@ public class MainActivity extends AppCompatActivity {
             mAdapter.notifyDataSetChanged();
         }
     }
-
 
 
     public void currentTimer(){
@@ -1178,10 +1184,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if(NParser.getStatus() == AsyncTask.Status.RUNNING){
+        if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
             NParser.cancel(true);
         }
-        if(DParser.getStatus() == AsyncTask.Status.RUNNING){
+        if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
             DParser.cancel(true);
         }
     }
