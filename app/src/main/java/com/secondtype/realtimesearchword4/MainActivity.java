@@ -621,7 +621,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+
+        if(isAllList) {
+            isAllList = false;
+            mRecyclerView.setVisibility(View.VISIBLE);
+            linearLayoutListAll.setVisibility(View.GONE);
+            fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+        }else{
+            super.onBackPressed();
+        }
     }
 
     public void ListAllBinding(int num){
@@ -1191,5 +1199,6 @@ public class MainActivity extends AppCompatActivity {
             DParser.cancel(true);
         }
     }
+
 }
 
