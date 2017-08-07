@@ -1,6 +1,7 @@
 package com.secondtype.realtimesearchword4;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -19,6 +21,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.kakao.kakaolink.KakaoLink;
+import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
+import com.kakao.util.helper.TalkProtocol;
 
 import java.util.ArrayList;
 
@@ -63,6 +68,8 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
 
         public Button moreReplyButton;
 
+        public ImageButton kakaoButton;
+
         public ViewHolder(View view){
             super(view);
             numberTextView = (TextView)view.findViewById(R.id.textview_number);
@@ -82,6 +89,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
             replyCount2 = (TextView)view.findViewById(R.id.textview_reply_count2);
             replyCount3 = (TextView)view.findViewById(R.id.textview_reply_count3);
             moreReplyButton = (Button)view.findViewById(R.id.button_more_reply);
+            kakaoButton = (ImageButton)view.findViewById(R.id.imagebutton_kakao_in_card);
         }
     }
 
@@ -226,11 +234,61 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                 ///////////////////////////////////////////////////////////
             }
         });
+
+        holder.kakaoButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                shareKakao("[지금이슈]\n" + mDataset.get(position).getNewsTitle(), mDataset.get(position).getNewsImage());
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
         return mDataset.size();
+    }
+
+    public void shareKakao(String text, String url)
+    {
+        try{
+//            Context context = getApplicationContext();
+            final KakaoLink kakaoLink = KakaoLink.getKakaoLink(mMainActivity);
+            final KakaoTalkLinkMessageBuilder kakaoBuilder = kakaoLink.createKakaoTalkLinkMessageBuilder();
+
+            // 메시지 추가
+            kakaoBuilder.addText(text);
+
+            // 이미지 가로/세로 사이즈는 80px 보다 커야하며, 이미지 용량은 500kb 이하로 제한된다.
+//            String url = "http://res.heraldm.com/phpwas/restmb_jhidxmake.php?idx=5&simg=201707082036382401607_20170708211509_01.jpg";
+            if(url != null && url != "NOIMAGE")
+                kakaoBuilder.addImage(url, 160, 160);
+
+            // 앱 실행버튼 추가
+            kakaoBuilder.addAppButton("앱 실행");
+
+
+            final Context context = mMainActivity;
+            final Intent intent = TalkProtocol.createKakakoTalkLinkIntent(context, kakaoBuilder.build());
+            if (intent == null) {
+                //alert install dialog
+                new android.app.AlertDialog.Builder(mMainActivity)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setMessage(context.getString(com.kakao.kakaolink.R.string.com_kakao_alert_install_kakaotalk))
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+//                                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(KakaoTalkLinkProtocol.TALK_MARKET_URL_PREFIX + makeReferrer())));
+                            }
+                        })
+                        .create().show();
+
+            } else {
+                // 메시지 발송
+                kakaoLink.sendMessage(kakaoBuilder, mMainActivity);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 }

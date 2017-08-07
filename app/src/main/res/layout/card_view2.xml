@@ -61,15 +61,32 @@
                         android:scaleType="centerCrop"
                         android:layout_weight="4"/>
 
-                    <TextView
-                        android:id="@+id/textview_newstitle"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:gravity="center_vertical"
-                        android:textSize="15sp"
-                        android:padding="5dp"
-                        android:textColor="#191919"
                         android:layout_height="1dp"
-                        android:layout_weight="1"/>
+                        android:orientation="horizontal"
+                        android:layout_weight="1">
+                        <TextView
+                            android:id="@+id/textview_newstitle"
+                            android:layout_width="1dp"
+                            android:gravity="center_vertical"
+                            android:textSize="15sp"
+                            android:padding="5dp"
+                            android:textColor="#191919"
+                            android:layout_height="match_parent"
+                            android:layout_weight="7"/>
+                        <ImageButton
+                            android:id="@+id/imagebutton_kakao_in_card"
+                            android:layout_width="1dp"
+                            android:gravity="center_vertical"
+                            android:src="@drawable/kakao_icon"
+                            android:scaleType="fitCenter"
+                            android:background="#00000000"
+                            android:padding="10dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"/>
+                    </LinearLayout>
+
                 </LinearLayout>
             </LinearLayout>
             <View
