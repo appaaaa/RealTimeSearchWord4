@@ -1,5 +1,6 @@
 package com.secondtype.realtimesearchword4;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -17,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.*;
 
@@ -60,12 +62,11 @@ import java.util.Date;
 
 
 public class MainActivity extends AppCompatActivity {
-    //test git
-    // test 2 git
-    //branch change
-
 
     public static Boolean switchs = false;
+
+    private FirebaseAnalytics mFirebaseAnalytics;
+    static Context context;
 
 
     private RecyclerView mRecyclerView;
@@ -136,6 +137,8 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseMessaging.getInstance().subscribeToTopic(FirebaseMessagingService.Subscribe);
         FirebaseInstanceId.getInstance().getToken();
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        context = this;
 
 
         loadingLayout = (LinearLayout)findViewById(R.id.linearlayout_loading);
@@ -151,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
                     mRecyclerView.setVisibility(View.GONE);
                     linearLayoutListAll.setVisibility(View.VISIBLE);
                     fab.setImageResource(R.drawable.ic_video_label_white_24px);
+                    onSendList();
                 }else{ //현재 검색어 리스트면 카드보기로 바꿈
                     isAllList = false;
                     mRecyclerView.setVisibility(View.VISIBLE);
@@ -697,306 +701,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-//        listAllText1.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(0).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true); //리스트에서 선택한 것
-//                    intent.putExtra("currentNumber", 0);
-//                 //   intent.putExtra("state", state);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText2.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //if(myDataset.size()>=1) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(1).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 1);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText3.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //if(myDataset.size()>=2) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(2).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true); //리스트에서 선택한 것
-//                    intent.putExtra("currentNumber", 2);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText4.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //if(myDataset.size()>=3) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(3).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 3);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText5.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=4) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(4).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 4);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText6.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //  if(myDataset.size()>=5) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(5).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 5);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText7.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=6) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(6).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 6);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText8.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                if(switchs) {
-//                    // if(myDataset.size()>=7) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(7).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 7);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText9.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=8) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(8).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 8);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText10.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=9) {
-//                if(switchs) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(9).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 9);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText11.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //  if(myDataset.size()>=10) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(10).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 10);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText12.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //  if(myDataset.size()>=11) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(11).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 11);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText13.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=12) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(12).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 12);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText14.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=13) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(13).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 13);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText15.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=14) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(14).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 14);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText16.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=15) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(15).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 15);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText17.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=16) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(16).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 16);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText18.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                // if(myDataset.size()>=17) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(17).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 17);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText19.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //  if(myDataset.size()>=18) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(18).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 18);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
-//        listAllText20.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                //  if(myDataset.size()>=19) {
-//                if(switchs && state.equals("NAVER")) {
-//                    Intent intent = new Intent(MainActivity.this, DetailWeb.class);
-//                    intent.putExtra("newsURL", myDataset.get(19).getNewsURL());
-//                    intent.putExtra("mDataset", myDataset);
-//                    intent.putExtra("allList", true);
-//                    intent.putExtra("currentNumber", 19);
-//                    startActivity(intent);
-//                    overridePendingTransition(R.anim.rightin, R.anim.notmove);
-//                }
-//            }
-//        });
         listAllText1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -1198,6 +902,26 @@ public class MainActivity extends AppCompatActivity {
         if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
             DParser.cancel(true);
         }
+    }
+
+    public void onSendList( ){
+        String s = "click list";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "List");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+
+      //  Toast.makeText(getApplicationContext(), "List Event", Toast.LENGTH_LONG).show();
+    }
+
+    public void onSendShare( ){
+        String s = "click share";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Share");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, bundle);
+
+      //  Toast.makeText(getApplicationContext(), "Share Event", Toast.LENGTH_LONG).show();
     }
 
 }

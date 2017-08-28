@@ -239,6 +239,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
             @Override
             public void onClick(View v) {
                 shareKakao("[지금이슈]\n" + mDataset.get(position).getNewsTitle(), mDataset.get(position).getNewsImage());
+                mMainActivity.onSendShare();
             }
         });
     }
