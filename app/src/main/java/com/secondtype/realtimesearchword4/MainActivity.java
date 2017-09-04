@@ -63,6 +63,8 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static Context mContext;
+
     public static Boolean switchs = false;
 
     private FirebaseAnalytics mFirebaseAnalytics;
@@ -133,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mContext = this;
+
         setContentView(R.layout.activity_main);
 
         FirebaseMessaging.getInstance().subscribeToTopic(FirebaseMessagingService.Subscribe);
@@ -922,6 +927,26 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, bundle);
 
       //  Toast.makeText(getApplicationContext(), "Share Event", Toast.LENGTH_LONG).show();
+    }
+
+    public void onSendReply( ){
+        String s = "click reply";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Reply");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_ITEM_LIST, bundle);
+
+        //  Toast.makeText(getApplicationContext(), "Click reply", Toast.LENGTH_LONG).show();
+    }
+
+    public void onSendOtherPost( ){
+        String s = "click other post";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "others");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.GENERATE_LEAD, bundle);
+
+        //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
     }
 
 }

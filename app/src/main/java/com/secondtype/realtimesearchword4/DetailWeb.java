@@ -123,6 +123,9 @@ public class DetailWeb extends AppCompatActivity {
                 // 메시지 발송
                 kakaoLink.sendMessage(kakaoBuilder, this);
             }
+
+            ((MainActivity)MainActivity.mContext).onSendShare();
+
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -188,6 +191,7 @@ public class DetailWeb extends AppCompatActivity {
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
+                ((MainActivity)MainActivity.mContext).onSendOtherPost();
             }
         });
         word2.setOnClickListener(new View.OnClickListener(){
@@ -199,6 +203,7 @@ public class DetailWeb extends AppCompatActivity {
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
+                ((MainActivity)MainActivity.mContext).onSendOtherPost();
             }
         });
         word3.setOnClickListener(new View.OnClickListener(){
@@ -210,6 +215,7 @@ public class DetailWeb extends AppCompatActivity {
                 openWeb(mURL);
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
+                ((MainActivity)MainActivity.mContext).onSendOtherPost();
             }
         });
 

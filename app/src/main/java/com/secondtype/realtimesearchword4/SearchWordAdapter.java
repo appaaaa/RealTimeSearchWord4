@@ -195,6 +195,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                 listViewDialog.setView(view);
                 listViewDialog.show();
 
+                mMainActivity.onSendReply();
 
                 ///////// + reply back button ////////////////////////////
                 replyBack.setOnClickListener(new View.OnClickListener(){
@@ -223,6 +224,8 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                 final AlertDialog listViewDialog = new AlertDialog.Builder(mMainActivity, R.style.YourDialogTheme).create();
                 listViewDialog.setView(view);
                 listViewDialog.show();
+
+                mMainActivity.onSendReply();
 
                 ///////// + reply back button ////////////////////////////
                 replyBack.setOnClickListener(new View.OnClickListener(){
