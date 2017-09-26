@@ -270,6 +270,8 @@ public class MainActivity extends AppCompatActivity {
                 Toast toast = Toast.makeText(getApplicationContext(), "다음 실시간 이슈 10개", Toast.LENGTH_SHORT);
                 toast.show();
 
+                onSendDAUM();
+
 
                 if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
                     DParser.cancel(true);
@@ -945,6 +947,26 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "others");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.GENERATE_LEAD, bundle);
+
+        //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
+    }
+
+    public void onSendNEWS( ){
+        String s = "click news";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "news");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.PRESENT_OFFER, bundle);
+
+        //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
+    }
+
+    public void onSendDAUM( ){
+        String s = "click daum";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "daum");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LEVEL_UP, bundle);
 
         //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
     }

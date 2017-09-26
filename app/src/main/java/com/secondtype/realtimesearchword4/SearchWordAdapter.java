@@ -156,6 +156,8 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
             @Override
             public void onClick(View view) {
 
+                mMainActivity.onSendNEWS();
+
                 if(s != null && MainActivity.switchs) {
                     Intent intent = new Intent(mMainActivity, DetailWeb.class);
                     intent.putExtra("newsURL", mDataset.get(position).getNewsURL()); //클릭한 뉴스 url
