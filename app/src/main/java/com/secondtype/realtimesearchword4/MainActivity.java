@@ -297,6 +297,7 @@ public class MainActivity extends AppCompatActivity {
 
                 DParser = new DaumParser();
                 DParser.execute();
+
             }
         });
 
@@ -319,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
     public class NaverParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
 
         String url = "http://datalab.naver.com/keyword/realtimeList.naver?where=main";
+        String url2 = "http://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001";
         Integer position = 0;
 
         @Override
@@ -328,6 +330,9 @@ public class MainActivity extends AppCompatActivity {
             try{
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("div.select_date ul li");
+
+                Document mDocument_news = Jsoup.connect(url2).get();
+                Elements mElements_news = mDocument_news.select("#newstopic_news li");
 
                 myDataset.clear();
                 ////// + list만 빨리 먼저 받아오기
@@ -339,10 +344,30 @@ public class MainActivity extends AppCompatActivity {
                     }
                     wordList.add(mElements.get(i).select("span.title").text());
                     //Log.v("appaaaa", "반복문1 : " + i);
-
                 }
 
-                for(int i = 0; i < mElements.size(); i++) {
+                for(int i = 0; i < 10; i++){
+                    if(NParser.isCancelled()){
+                        Log.v("appaaaa", "break1 : " + i);
+                        return null;
+                    }
+                    Log.v("testerror", mElements_news.get(i).select("a").attr("title"));
+                    wordList.add(mElements_news.get(i).select("a").attr("title"));
+                }
+
+                mElements_news = mDocument_news.select("#newstopic_entertain li");
+
+                for(int i = 0; i < 10; i++){
+                    if(NParser.isCancelled()){
+                        Log.v("appaaaa", "break1 : " + i);
+                        return null;
+                    }
+                    wordList.add(mElements_news.get(i).select("a").attr("title"));
+                }
+
+
+
+                for(int i = 0; i < wordList.size(); i++) {
                     if(NParser.isCancelled()){
                         Log.v("appaaaa", "naver break2 : " + i);
                         return null;
@@ -350,9 +375,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("appaaaa", "naver 반복문2 : " + i);
                     SearchWord searchWord = new SearchWord();
                     searchWord.setNumber(Integer.toString(i + 1));
-                    searchWord.setWord(mElements.get(i).select("span.title").text());
+                    searchWord.setWord(wordList.get(i));
 
                     String newsUrl = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                    Log.v("testerror", newsUrl);
 
                     try {
                         Document mDocument2 = Jsoup.connect(newsUrl).get();
@@ -619,6 +645,7 @@ public class MainActivity extends AppCompatActivity {
             mAdapter.notifyDataSetChanged();
         }
     }
+
 
 
     public void currentTimer(){
