@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     public static Context mContext;
 
     public static Boolean switchs = false;
+    public Boolean checkLast = false;
 
     private FirebaseAnalytics mFirebaseAnalytics;
     static Context context;
@@ -84,8 +85,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Reply> replyList;
 
     private String state = "NAVER"; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
+    private String state2 = "tab1";
     private boolean isAllList = false;
-    private Integer click = 1;
 
 
     ////////////////// + list all ////////////////
@@ -123,6 +124,10 @@ public class MainActivity extends AppCompatActivity {
     Button naverBtn;
     Button daumBtn;
     FloatingActionButton fab;
+
+    Button tabButton1;
+    Button tabButton2;
+    Button tabButton3;
     ////////////////////////////////
 
     ////// + searchword 만 따로 받아오기. 리스트 표시용
@@ -130,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
     ////////////////////////////////////////////////////
 
     public NaverParser NParser;  //네이버 asynctask
+    public NaverParser2 NParser2; //네이버 뉴스토픽
+    public NaverParser3 NParser3; // 네이버 연애&스포츠
+
     public DaumParser DParser; // 다음 asynctask
 
     @Override
@@ -202,10 +210,22 @@ public class MainActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
+
         myDataset = new ArrayList<>();
         mAdapter = new SearchWordAdapter(getApplication(),myDataset, MainActivity.this);
         mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int lastVisibleItemPosition = ((LinearLayoutManager)mRecyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                int itemTotalCount = mRecyclerView.getAdapter().getItemCount() -1;
 
+                if(checkLast && lastVisibleItemPosition == itemTotalCount){
+                    Toast.makeText(getApplicationContext(), "마지막입니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         daumDataset = new ArrayList<>();
 
         //// naver
@@ -237,10 +257,7 @@ public class MainActivity extends AppCompatActivity {
                     }catch (Exception e){
                         e.printStackTrace();
                     }
-
                 }
-
-                click = 2;
 
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
@@ -288,8 +305,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("appaaaa", "NParser cancel");
                 }
 
-                click = 2;
-
                 myDataset.clear();
                 mRecyclerView.setAdapter(mAdapter);
                 switchs = false;
@@ -298,6 +313,264 @@ public class MainActivity extends AppCompatActivity {
                 DParser = new DaumParser();
                 DParser.execute();
 
+            }
+        });
+
+        tabButton1 = (Button)findViewById(R.id.button_tab1);
+        tabButton1.setTextSize(19);
+        tabButton1.setTextColor(Color.parseColor("#00c73c"));
+
+        tabButton2 = (Button)findViewById(R.id.button_tab2);
+        tabButton2.setTextSize(16);
+        tabButton2.setTextColor(Color.parseColor("#000000"));
+
+        tabButton3 = (Button)findViewById(R.id.button_tab3);
+        tabButton3.setTextSize(16);
+        tabButton3.setTextColor(Color.parseColor("#000000"));
+
+        tabButton1.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                tabButton2.setTextSize(16);
+                tabButton2.setTextColor(Color.parseColor("#000000"));
+                tabButton3.setTextSize(16);
+                tabButton3.setTextColor(Color.parseColor("#000000"));
+                tabButton1.setTextSize(19);
+                tabButton1.setTextColor(Color.parseColor("#00c73c"));
+
+                mRecyclerView.setVisibility(View.VISIBLE);
+                linearLayoutListAll.setVisibility(View.GONE);
+                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+
+                if(state.equals("NAVER")) {
+                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+                        DParser.cancel(true);
+                        Log.v("appaaaa", "DParser cancel");
+                    }
+                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser.cancel(true);
+                        Log.v("appaaaa", "NParser1 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser2.cancel(true);
+                        Log.v("appaaaa", "NParser2 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser3.cancel(true);
+                        Log.v("appaaaa", "NParser3 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+
+                    myDataset.clear();
+                    mRecyclerView.setAdapter(mAdapter);
+                    switchs = false;
+
+                    NParser = new NaverParser();
+                    NParser.execute();
+                } else if(state.equals("DAUM")) {
+                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+                        DParser.cancel(true);
+                        Log.v("appaaaa", "DParser cancel in button");
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser.cancel(true);
+                        Log.v("appaaaa", "NParser cancel");
+                    }
+
+                    myDataset.clear();
+                    mRecyclerView.setAdapter(mAdapter);
+                    switchs = false;
+
+                    DParser = new DaumParser();
+                    DParser.execute();
+                }
+
+            }
+        });
+
+        tabButton2.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                tabButton1.setTextSize(16);
+                tabButton1.setTextColor(Color.parseColor("#000000"));
+                tabButton3.setTextSize(16);
+                tabButton3.setTextColor(Color.parseColor("#000000"));
+                tabButton2.setTextSize(19);
+                tabButton2.setTextColor(Color.parseColor("#00c73c"));
+
+                mRecyclerView.setVisibility(View.VISIBLE);
+                linearLayoutListAll.setVisibility(View.GONE);
+                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+
+                if(state.equals("NAVER")) {
+                    Log.v("appaaaa", "NAVER if start");
+                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+                        DParser.cancel(true);
+                        Log.v("appaaaa", "DParser cancel");
+                    }
+                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+                            NParser.cancel(true);
+                            Log.v("appaaaa", "NParser1 cancel in button");
+
+                            try{
+                                Thread.sleep(500);
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                    }
+                    if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser2.cancel(true);
+                        Log.v("appaaaa", "NParser2 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser3.cancel(true);
+                        Log.v("appaaaa", "NParser3 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+
+                    myDataset.clear();
+                    mRecyclerView.setAdapter(mAdapter);
+                    switchs = false;
+
+                    NParser2 = new NaverParser2();
+                    NParser2.execute();
+                } else if(state.equals("DAUM")) {
+                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+                        DParser.cancel(true);
+                        Log.v("appaaaa", "DParser cancel in button");
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser.cancel(true);
+                        Log.v("appaaaa", "NParser cancel");
+                    }
+
+                    myDataset.clear();
+                    mRecyclerView.setAdapter(mAdapter);
+                    switchs = false;
+
+                    DParser = new DaumParser();
+                    DParser.execute();
+                }
+            }
+        });
+
+        tabButton3.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                tabButton1.setTextSize(16);
+                tabButton1.setTextColor(Color.parseColor("#000000"));
+                tabButton2.setTextSize(16);
+                tabButton2.setTextColor(Color.parseColor("#000000"));
+                tabButton3.setTextSize(19);
+                tabButton3.setTextColor(Color.parseColor("#00c73c"));
+
+                mRecyclerView.setVisibility(View.VISIBLE);
+                linearLayoutListAll.setVisibility(View.GONE);
+                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+
+                if(state.equals("NAVER")) {
+                    Log.v("appaaaa", "NAVER if start");
+                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+                        DParser.cancel(true);
+                        Log.v("appaaaa", "DParser cancel");
+                    }
+                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser.cancel(true);
+                        Log.v("appaaaa", "NParser1 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser2.cancel(true);
+                        Log.v("appaaaa", "NParser2 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser3.cancel(true);
+                        Log.v("appaaaa", "NParser3 cancel in button");
+
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+
+                    myDataset.clear();
+                    mRecyclerView.setAdapter(mAdapter);
+                    switchs = false;
+
+                    NParser3 = new NaverParser3();
+                    NParser3.execute();
+                } else if(state.equals("DAUM")) {
+                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+                        DParser.cancel(true);
+                        Log.v("appaaaa", "DParser cancel in button");
+                        try{
+                            Thread.sleep(500);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+                        NParser.cancel(true);
+                        Log.v("appaaaa", "NParser cancel");
+                    }
+
+                    myDataset.clear();
+                    mRecyclerView.setAdapter(mAdapter);
+                    switchs = false;
+
+                    DParser = new DaumParser();
+                    DParser.execute();
+                }
             }
         });
 
@@ -320,7 +593,7 @@ public class MainActivity extends AppCompatActivity {
     public class NaverParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
 
         String url = "http://datalab.naver.com/keyword/realtimeList.naver?where=main";
-        String url2 = "http://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001";
+
         Integer position = 0;
 
         @Override
@@ -331,8 +604,6 @@ public class MainActivity extends AppCompatActivity {
                 Document mDocument = Jsoup.connect(url).get();
                 Elements mElements = mDocument.select("div.select_date ul li");
 
-                Document mDocument_news = Jsoup.connect(url2).get();
-                Elements mElements_news = mDocument_news.select("#newstopic_news li");
 
                 myDataset.clear();
                 ////// + list만 빨리 먼저 받아오기
@@ -345,27 +616,6 @@ public class MainActivity extends AppCompatActivity {
                     wordList.add(mElements.get(i).select("span.title").text());
                     //Log.v("appaaaa", "반복문1 : " + i);
                 }
-
-                for(int i = 0; i < 10; i++){
-                    if(NParser.isCancelled()){
-                        Log.v("appaaaa", "break1 : " + i);
-                        return null;
-                    }
-                    Log.v("testerror", mElements_news.get(i).select("a").attr("title"));
-                    wordList.add(mElements_news.get(i).select("a").attr("title"));
-                }
-
-                mElements_news = mDocument_news.select("#newstopic_entertain li");
-
-                for(int i = 0; i < 10; i++){
-                    if(NParser.isCancelled()){
-                        Log.v("appaaaa", "break1 : " + i);
-                        return null;
-                    }
-                    wordList.add(mElements_news.get(i).select("a").attr("title"));
-                }
-
-
 
                 for(int i = 0; i < wordList.size(); i++) {
                     if(NParser.isCancelled()){
@@ -456,7 +706,6 @@ public class MainActivity extends AppCompatActivity {
             currentTimer();
             loadingLayout.setVisibility(View.VISIBLE);
 
-            click = 1;
             listAllText11.setVisibility(View.VISIBLE);
             listAllText12.setVisibility(View.VISIBLE);
             listAllText13.setVisibility(View.VISIBLE);
@@ -467,6 +716,8 @@ public class MainActivity extends AppCompatActivity {
             listAllText18.setVisibility(View.VISIBLE);
             listAllText19.setVisibility(View.VISIBLE);
             listAllText20.setVisibility(View.VISIBLE);
+
+            checkLast=false;
 
             super.onPreExecute();
         }
@@ -491,6 +742,317 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            checkLast = true;
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+    public class NaverParser2 extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
+
+        String url2 = "http://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001";
+        Integer position = 0;
+
+        @Override
+        protected ArrayList<SearchWord> doInBackground(Void... voids) {
+            ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
+
+            try{
+                Document mDocument_news = Jsoup.connect(url2).get();
+                Elements mElements_news = mDocument_news.select("#newstopic_news li");
+
+                myDataset.clear();
+                ////// + list만 빨리 먼저 받아오기
+                wordList.clear();
+
+                for(int i = 0; i < 10; i++){
+                    if(NParser2.isCancelled()){
+                        Log.v("appaaaa", "break1 : " + i);
+                        return null;
+                    }
+                    Log.v("testerror", mElements_news.get(i).select("a").attr("title"));
+                    wordList.add(mElements_news.get(i).select("a").attr("title"));
+                }
+
+                for(int i = 0; i < wordList.size(); i++) {
+                    if(NParser2.isCancelled()){
+                        Log.v("appaaaa", "naver break2 : " + i);
+                        return null;
+                    }
+                    Log.v("appaaaa", "naver 반복문2 : " + i);
+                    SearchWord searchWord = new SearchWord();
+                    searchWord.setNumber(Integer.toString(i + 1));
+                    searchWord.setWord(wordList.get(i));
+
+                    String newsUrl = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                    Log.v("testerror", newsUrl);
+
+                    try {
+                        Document mDocument2 = Jsoup.connect(newsUrl).get();
+                        Elements newsElement = mDocument2.select("div.news ul.type01>li");
+
+                        if (newsElement != null) { //기사에 이미지 있는 경우만 이미지 받아옴
+                            if(!newsElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                String temp = newsElement.get(0).select("div.thumb a img").attr("src");
+                                String s = newsElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                searchWord.setNewsImage(s);
+                            }
+                            else{
+                                searchWord.setNewsImage("NOIMAGE");
+                            }
+
+
+                            searchWord.setNewsURL(newsElement.get(0).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL2(newsElement.get(1).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL3(newsElement.get(2).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL4(newsElement.get(3).select("dl dt a").attr("href"));
+
+                            searchWord.setNewsTitle(newsElement.get(0).select("dl dt a").text());
+                            searchWord.setNewsTitle2(newsElement.get(1).select("dl dt a").text());
+                            searchWord.setNewsTitle3(newsElement.get(2).select("dl dt a").text());
+                            searchWord.setNewsTitle4(newsElement.get(3).select("dl dt a").text());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    String replysUrl = "https://search.naver.com/search.naver?where=realtime&query=" + searchWord.getWord() + "&best=1";
+
+                    try{
+                        Document mDocument3 = Jsoup.connect(replysUrl).get();
+                        Elements replyElements = mDocument3.select("ul.type01 li");
+
+                        for(int j = 0; j < replyElements.size(); j++){
+                            if(NParser2.isCancelled()){
+                                Log.v("appaaaa", "naver break3 : " + j);
+                                return null;
+                            }
+                            //Log.v("naver appaaaa", "반복문3 : " + j);
+                            Reply mReply = new Reply();
+                            mReply.name = replyElements.get(j).select(".user_name").text();
+
+                            if(!replyElements.get(j).select(".sub_retweet").text().isEmpty()){
+                                mReply.text = replyElements.get(j).select(".cmmt").text();
+                                mReply.time = replyElements.get(j).select(".time").text();
+                                mReply.count1 = replyElements.get(j).select(".sub_retweet").text();
+                                mReply.count2 = replyElements.get(j).select(".sub_interest").text();
+                                mReply.count3 = "  ";
+                            }
+                            else if(!replyElements.get(j).select(".sub_reply").text().isEmpty()){
+                                mReply.text = replyElements.get(j).select(".txt_link").text();
+                                mReply.time = replyElements.get(j).select(".sub_time").text();
+                                mReply.count1 = replyElements.get(j).select(".sub_reply").text();
+                                mReply.count2 = replyElements.get(j).select(".sub_like").text();
+                                mReply.count3 = replyElements.get(j).select(".sub_dis").text();
+                            }
+                            searchWord.getReplyArrayList().add(mReply);
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    publishProgress(searchWord);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return tempList;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            currentTimer();
+            loadingLayout.setVisibility(View.VISIBLE);
+
+            listAllText11.setVisibility(View.VISIBLE);
+            listAllText12.setVisibility(View.VISIBLE);
+            listAllText13.setVisibility(View.VISIBLE);
+            listAllText14.setVisibility(View.VISIBLE);
+            listAllText15.setVisibility(View.VISIBLE);
+            listAllText16.setVisibility(View.VISIBLE);
+            listAllText17.setVisibility(View.VISIBLE);
+            listAllText18.setVisibility(View.VISIBLE);
+            listAllText19.setVisibility(View.VISIBLE);
+            listAllText20.setVisibility(View.VISIBLE);
+
+            checkLast=false;
+
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(SearchWord... values) {
+            myDataset.add(values[0]);
+            mAdapter.notifyItemInserted(position++);
+
+            //    ListAllBinding(Integer.parseInt(values[0].getNumber()));
+
+            if(Integer.parseInt(values[0].getNumber()) == 2){
+                loadingLayout.setVisibility(View.GONE);
+
+                for(int i = 0; i < wordList.size(); i++){
+                    ListAllBinding(i+1);
+                }
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<SearchWord> tempList) {
+            switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            checkLast = true;
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+    public class NaverParser3 extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
+
+        String url2 = "http://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001";
+        Integer position = 0;
+
+        @Override
+        protected ArrayList<SearchWord> doInBackground(Void... voids) {
+            ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
+
+            try{
+
+                Document mDocument_news = Jsoup.connect(url2).get();
+                Elements mElements_news = mDocument_news.select("#newstopic_entertain li");
+
+                myDataset.clear();
+                ////// + list만 빨리 먼저 받아오기
+                wordList.clear();
+
+                for(int i = 0; i < 10; i++){
+                    if(NParser3.isCancelled()){
+                        Log.v("appaaaa", "break1 : " + i);
+                        return null;
+                    }
+                    wordList.add(mElements_news.get(i).select("a").attr("title"));
+                }
+
+                for(int i = 0; i < wordList.size(); i++) {
+                    if(NParser3.isCancelled()){
+                        Log.v("appaaaa", "naver break2 : " + i);
+                        return null;
+                    }
+                    Log.v("appaaaa", "naver 반복문2 : " + i);
+                    SearchWord searchWord = new SearchWord();
+                    searchWord.setNumber(Integer.toString(i + 1));
+                    searchWord.setWord(wordList.get(i));
+
+                    String newsUrl = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                    Log.v("testerror", newsUrl);
+
+                    try {
+                        Document mDocument2 = Jsoup.connect(newsUrl).get();
+                        Elements newsElement = mDocument2.select("div.news ul.type01>li");
+
+                        if (newsElement != null) { //기사에 이미지 있는 경우만 이미지 받아옴
+                            if(!newsElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                String temp = newsElement.get(0).select("div.thumb a img").attr("src");
+                                String s = newsElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                searchWord.setNewsImage(s);
+                            }
+                            else{
+                                searchWord.setNewsImage("NOIMAGE");
+                            }
+
+
+                            searchWord.setNewsURL(newsElement.get(0).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL2(newsElement.get(1).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL3(newsElement.get(2).select("dl dt a").attr("href"));
+                            searchWord.setNewsURL4(newsElement.get(3).select("dl dt a").attr("href"));
+
+                            searchWord.setNewsTitle(newsElement.get(0).select("dl dt a").text());
+                            searchWord.setNewsTitle2(newsElement.get(1).select("dl dt a").text());
+                            searchWord.setNewsTitle3(newsElement.get(2).select("dl dt a").text());
+                            searchWord.setNewsTitle4(newsElement.get(3).select("dl dt a").text());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    String replysUrl = "https://search.naver.com/search.naver?where=realtime&query=" + searchWord.getWord() + "&best=1";
+
+                    try{
+                        Document mDocument3 = Jsoup.connect(replysUrl).get();
+                        Elements replyElements = mDocument3.select("ul.type01 li");
+
+                        for(int j = 0; j < replyElements.size(); j++){
+                            if(NParser3.isCancelled()){
+                                Log.v("appaaaa", "naver break3 : " + j);
+                                return null;
+                            }
+                            //Log.v("naver appaaaa", "반복문3 : " + j);
+                            Reply mReply = new Reply();
+                            mReply.name = replyElements.get(j).select(".user_name").text();
+
+                            if(!replyElements.get(j).select(".sub_retweet").text().isEmpty()){
+                                mReply.text = replyElements.get(j).select(".cmmt").text();
+                                mReply.time = replyElements.get(j).select(".time").text();
+                                mReply.count1 = replyElements.get(j).select(".sub_retweet").text();
+                                mReply.count2 = replyElements.get(j).select(".sub_interest").text();
+                                mReply.count3 = "  ";
+                            }
+                            else if(!replyElements.get(j).select(".sub_reply").text().isEmpty()){
+                                mReply.text = replyElements.get(j).select(".txt_link").text();
+                                mReply.time = replyElements.get(j).select(".sub_time").text();
+                                mReply.count1 = replyElements.get(j).select(".sub_reply").text();
+                                mReply.count2 = replyElements.get(j).select(".sub_like").text();
+                                mReply.count3 = replyElements.get(j).select(".sub_dis").text();
+                            }
+                            searchWord.getReplyArrayList().add(mReply);
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    publishProgress(searchWord);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return tempList;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            currentTimer();
+            loadingLayout.setVisibility(View.VISIBLE);
+
+            listAllText11.setVisibility(View.VISIBLE);
+            listAllText12.setVisibility(View.VISIBLE);
+            listAllText13.setVisibility(View.VISIBLE);
+            listAllText14.setVisibility(View.VISIBLE);
+            listAllText15.setVisibility(View.VISIBLE);
+            listAllText16.setVisibility(View.VISIBLE);
+            listAllText17.setVisibility(View.VISIBLE);
+            listAllText18.setVisibility(View.VISIBLE);
+            listAllText19.setVisibility(View.VISIBLE);
+            listAllText20.setVisibility(View.VISIBLE);
+
+            checkLast=false;
+
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(SearchWord... values) {
+            myDataset.add(values[0]);
+            mAdapter.notifyItemInserted(position++);
+
+            //    ListAllBinding(Integer.parseInt(values[0].getNumber()));
+
+            if(Integer.parseInt(values[0].getNumber()) == 2){
+                loadingLayout.setVisibility(View.GONE);
+
+                for(int i = 0; i < wordList.size(); i++){
+                    ListAllBinding(i+1);
+                }
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<SearchWord> tempList) {
+            switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            checkLast = true;
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -617,6 +1179,9 @@ public class MainActivity extends AppCompatActivity {
             listAllText18.setVisibility(View.GONE);
             listAllText19.setVisibility(View.GONE);
             listAllText20.setVisibility(View.GONE);
+
+            checkLast=false;
+
             super.onPreExecute();
         }
 
@@ -636,12 +1201,12 @@ public class MainActivity extends AppCompatActivity {
                     ListAllBinding(i+1);
                 }
             }
-
         }
 
         @Override
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            checkLast=true;
             mAdapter.notifyDataSetChanged();
         }
     }
