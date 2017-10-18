@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -24,6 +25,7 @@ import com.google.firebase.messaging.*;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.text.SimpleDateFormat;
@@ -50,6 +52,8 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.kakao.kakaolink.KakaoLink;
 import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
 import com.kakao.util.KakaoParameterException;
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -84,9 +88,18 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Reply> replyList;
 
-    private String state = "NAVER"; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
-    private String state2 = "tab1";
+    public static final String NAVER = "NAVER";
+    public static final String DAUM = "DAUM";
+    public static final String TAB1 = "TAB1";
+    public static final String TAB2 = "TAB2";
+    public static final String TAB3 = "TAB3";
+
+
+    private String state = NAVER; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
+    private String state2 = TAB1;
+
     private boolean isAllList = false;
+    private boolean isLast = false;
 
 
     ////////////////// + list all ////////////////
@@ -139,6 +152,10 @@ public class MainActivity extends AppCompatActivity {
     public NaverParser3 NParser3; // 네이버 연애&스포츠
 
     public DaumParser DParser; // 다음 asynctask
+    public DaumParser2 DParser2;
+    public DaumParser3 DParser3;
+
+    SwipyRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,6 +220,26 @@ public class MainActivity extends AppCompatActivity {
         listAllText20 = (TextView)findViewById(R.id.textview_listall_text20);
         ///////////////////////////////////////////////////////////////
 
+        mSwipeRefreshLayout = (SwipyRefreshLayout) findViewById(R.id.swiperefreshlayout);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener(){
+            @Override
+            public void onRefresh(SwipyRefreshLayoutDirection direction) {
+                if(direction == SwipyRefreshLayoutDirection.TOP){
+
+                    mSwipeRefreshLayout.setRefreshing(false);
+                } else if(direction == SwipyRefreshLayoutDirection.BOTTOM){
+                    if(isLast){
+                        if(state2.equals(TAB1)){
+                            tab2Event();
+                        }else if(state2.equals(TAB2)){
+                            tab3Event();
+                        }
+                    }
+
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        });
 
 
         mRecyclerView = (RecyclerView)findViewById(R.id.recycler_view);
@@ -222,100 +259,32 @@ public class MainActivity extends AppCompatActivity {
                 int itemTotalCount = mRecyclerView.getAdapter().getItemCount() -1;
 
                 if(checkLast && lastVisibleItemPosition == itemTotalCount){
-                    Toast.makeText(getApplicationContext(), "마지막입니다.", Toast.LENGTH_SHORT).show();
+                    if(state2.equals(TAB1) || state2.equals(TAB2))
+                        Toast.makeText(getApplicationContext(), "마지막입니다. 스크롤하시면 다음페이지로 넘어갑니다. ", Toast.LENGTH_SHORT).show();
                 }
             }
         });
+
         daumDataset = new ArrayList<>();
 
-        //// naver
-        naverBtn = (Button)findViewById(R.id.button_naver);
-        naverBtn.setTextSize(19);
-        naverBtn.setTextColor(Color.parseColor("#00c73c"));
-
+        topListDesign();
         naverBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                daumBtn.setTextSize(16);
-                daumBtn.setTextColor(Color.parseColor("#000000"));
-                naverBtn.setTextSize(19);
-                naverBtn.setTextColor(Color.parseColor("#00c73c"));
-                mRecyclerView.setVisibility(View.VISIBLE);
-                linearLayoutListAll.setVisibility(View.GONE);
-                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
-
-                if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                    DParser.cancel(true);
-                    Log.v("appaaaa", "DParser cancel");
-                }
-                if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                    NParser.cancel(true);
-                    Log.v("appaaaa", "NParser cancel in button");
-
-                    try{
-                        Thread.sleep(500);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                }
-
-                myDataset.clear();
-                mRecyclerView.setAdapter(mAdapter);
-                switchs = false;
-                state = "NAVER";
-
-                NParser = new NaverParser();
-                NParser.execute();
+                state = NAVER;
+                topListDesign();
+                tab1Event();
             }
         });
-
-        //// daum
-        daumBtn = (Button)findViewById(R.id.button_daum);
-        daumBtn.setTextSize(16);
-        daumBtn.setTextColor(Color.parseColor("#000000"));
-
         daumBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                daumBtn.setTextSize(19);
-                daumBtn.setTextColor(Color.parseColor("#f1685e"));
-                naverBtn.setTextSize(16);
-                naverBtn.setTextColor(Color.parseColor("#000000"));
-                mRecyclerView.setVisibility(View.VISIBLE);
-                linearLayoutListAll.setVisibility(View.GONE);
-                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
-                Toast toast = Toast.makeText(getApplicationContext(), "다음 실시간 이슈 10개", Toast.LENGTH_SHORT);
-                toast.show();
-
+                state = DAUM;
+                topListDesign();
+                tab1Event();
                 onSendDAUM();
-
-
-                if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                    DParser.cancel(true);
-                    Log.v("appaaaa", "DParser cancel in button");
-                    try{
-                        Thread.sleep(500);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-
-                }
-                if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                    NParser.cancel(true);
-                    Log.v("appaaaa", "NParser cancel");
-                }
-
-                myDataset.clear();
-                mRecyclerView.setAdapter(mAdapter);
-                switchs = false;
-                state = "DAUM";
-
-                DParser = new DaumParser();
-                DParser.execute();
-
             }
         });
-
         tabButton1 = (Button)findViewById(R.id.button_tab1);
         tabButton1.setTextSize(19);
         tabButton1.setTextColor(Color.parseColor("#00c73c"));
@@ -331,264 +300,328 @@ public class MainActivity extends AppCompatActivity {
         tabButton1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                tabButton2.setTextSize(16);
-                tabButton2.setTextColor(Color.parseColor("#000000"));
-                tabButton3.setTextSize(16);
-                tabButton3.setTextColor(Color.parseColor("#000000"));
-                tabButton1.setTextSize(19);
-                tabButton1.setTextColor(Color.parseColor("#00c73c"));
-
-                mRecyclerView.setVisibility(View.VISIBLE);
-                linearLayoutListAll.setVisibility(View.GONE);
-                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
-
-                if(state.equals("NAVER")) {
-                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                        DParser.cancel(true);
-                        Log.v("appaaaa", "DParser cancel");
-                    }
-                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser.cancel(true);
-                        Log.v("appaaaa", "NParser1 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser2.cancel(true);
-                        Log.v("appaaaa", "NParser2 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser3.cancel(true);
-                        Log.v("appaaaa", "NParser3 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-
-                    myDataset.clear();
-                    mRecyclerView.setAdapter(mAdapter);
-                    switchs = false;
-
-                    NParser = new NaverParser();
-                    NParser.execute();
-                } else if(state.equals("DAUM")) {
-                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                        DParser.cancel(true);
-                        Log.v("appaaaa", "DParser cancel in button");
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser.cancel(true);
-                        Log.v("appaaaa", "NParser cancel");
-                    }
-
-                    myDataset.clear();
-                    mRecyclerView.setAdapter(mAdapter);
-                    switchs = false;
-
-                    DParser = new DaumParser();
-                    DParser.execute();
-                }
-
+                tab1Event();
             }
         });
 
         tabButton2.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                tabButton1.setTextSize(16);
-                tabButton1.setTextColor(Color.parseColor("#000000"));
-                tabButton3.setTextSize(16);
-                tabButton3.setTextColor(Color.parseColor("#000000"));
-                tabButton2.setTextSize(19);
-                tabButton2.setTextColor(Color.parseColor("#00c73c"));
-
-                mRecyclerView.setVisibility(View.VISIBLE);
-                linearLayoutListAll.setVisibility(View.GONE);
-                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
-
-                if(state.equals("NAVER")) {
-                    Log.v("appaaaa", "NAVER if start");
-                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                        DParser.cancel(true);
-                        Log.v("appaaaa", "DParser cancel");
-                    }
-                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                            NParser.cancel(true);
-                            Log.v("appaaaa", "NParser1 cancel in button");
-
-                            try{
-                                Thread.sleep(500);
-                            }catch (Exception e){
-                                e.printStackTrace();
-                            }
-                    }
-                    if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser2.cancel(true);
-                        Log.v("appaaaa", "NParser2 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser3.cancel(true);
-                        Log.v("appaaaa", "NParser3 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-
-                    myDataset.clear();
-                    mRecyclerView.setAdapter(mAdapter);
-                    switchs = false;
-
-                    NParser2 = new NaverParser2();
-                    NParser2.execute();
-                } else if(state.equals("DAUM")) {
-                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                        DParser.cancel(true);
-                        Log.v("appaaaa", "DParser cancel in button");
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser.cancel(true);
-                        Log.v("appaaaa", "NParser cancel");
-                    }
-
-                    myDataset.clear();
-                    mRecyclerView.setAdapter(mAdapter);
-                    switchs = false;
-
-                    DParser = new DaumParser();
-                    DParser.execute();
-                }
+                tab2Event();
             }
         });
 
         tabButton3.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                tabButton1.setTextSize(16);
-                tabButton1.setTextColor(Color.parseColor("#000000"));
-                tabButton2.setTextSize(16);
-                tabButton2.setTextColor(Color.parseColor("#000000"));
-                tabButton3.setTextSize(19);
-                tabButton3.setTextColor(Color.parseColor("#00c73c"));
-
-                mRecyclerView.setVisibility(View.VISIBLE);
-                linearLayoutListAll.setVisibility(View.GONE);
-                fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
-
-                if(state.equals("NAVER")) {
-                    Log.v("appaaaa", "NAVER if start");
-                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                        DParser.cancel(true);
-                        Log.v("appaaaa", "DParser cancel");
-                    }
-                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser.cancel(true);
-                        Log.v("appaaaa", "NParser1 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser2.cancel(true);
-                        Log.v("appaaaa", "NParser2 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser3.cancel(true);
-                        Log.v("appaaaa", "NParser3 cancel in button");
-
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-
-                    myDataset.clear();
-                    mRecyclerView.setAdapter(mAdapter);
-                    switchs = false;
-
-                    NParser3 = new NaverParser3();
-                    NParser3.execute();
-                } else if(state.equals("DAUM")) {
-                    if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
-                        DParser.cancel(true);
-                        Log.v("appaaaa", "DParser cancel in button");
-                        try{
-                            Thread.sleep(500);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
-                        NParser.cancel(true);
-                        Log.v("appaaaa", "NParser cancel");
-                    }
-
-                    myDataset.clear();
-                    mRecyclerView.setAdapter(mAdapter);
-                    switchs = false;
-
-                    DParser = new DaumParser();
-                    DParser.execute();
-                }
+                tab3Event();
             }
         });
-
-        /////////////////////////////////////////////
 
         ////// + searchword만 따로 받아오기
         wordList = new ArrayList<>();
         ///////////////////////////////////
-
-        ////////// + 데이터 수신 중 막기 //////////
-        //  contentLinearlayout = (LinearLayout)findViewById(R.id.linearlayout_contents);
-        //  contentLinearlayout.setClickable(false);
 
         myDataset.clear();
         NParser = new NaverParser();
         NParser.execute( );
     }
 
+    public void topListDesign() {
+        if(state.equals(NAVER)) {
+            naverBtn = (Button)findViewById(R.id.button_naver);
+            naverBtn.setTextSize(18);
+            naverBtn.setTextColor(Color.parseColor("#00c73c"));
+
+            daumBtn = (Button)findViewById(R.id.button_daum);
+            daumBtn.setTextSize(16);
+            daumBtn.setTextColor(Color.parseColor("#000000"));
+        } else if(state.equals(DAUM)) {
+            naverBtn = (Button) findViewById(R.id.button_naver);
+            naverBtn.setTextSize(16);
+            naverBtn.setTextColor(Color.parseColor("#000000"));
+
+            daumBtn = (Button) findViewById(R.id.button_daum);
+            daumBtn.setTextSize(18);
+            daumBtn.setTextColor(Color.parseColor("#f1685e"));
+        }
+    }
+
+    public void tab1Event(){
+        onSendTab1();
+        tabButton2.setTextSize(16);
+        tabButton2.setTextColor(Color.parseColor("#000000"));
+        tabButton3.setTextSize(16);
+        tabButton3.setTextColor(Color.parseColor("#000000"));
+
+
+        mRecyclerView.setVisibility(View.VISIBLE);
+        linearLayoutListAll.setVisibility(View.GONE);
+        fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+
+        if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+            NParser.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
+            NParser2.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
+            NParser3.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+            DParser.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser2 != null && DParser2.getStatus() == AsyncTask.Status.RUNNING){
+            DParser2.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser3 != null && DParser3.getStatus() == AsyncTask.Status.RUNNING){
+            DParser3.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        if(state.equals("NAVER")) {
+            tabButton1.setTextSize(19);
+            tabButton1.setTextColor(Color.parseColor("#00c73c"));
+
+            myDataset.clear();
+            mRecyclerView.setAdapter(mAdapter);
+            switchs = false;
+
+            NParser = new NaverParser();
+            NParser.execute();
+
+            state = NAVER;
+            state2 = TAB1;
+
+        } else if(state.equals("DAUM")) {
+            tabButton1.setTextSize(19);
+            tabButton1.setTextColor(Color.parseColor("#f1685e"));
+
+            myDataset.clear();
+            mRecyclerView.setAdapter(mAdapter);
+            switchs = false;
+
+            DParser = new DaumParser();
+            DParser.execute();
+
+            state = DAUM;
+            state2 = TAB1;
+        }
+    }
+
+    public void tab2Event(){
+        tabButton1.setTextSize(16);
+        tabButton1.setTextColor(Color.parseColor("#000000"));
+        tabButton3.setTextSize(16);
+        tabButton3.setTextColor(Color.parseColor("#000000"));
+
+        mRecyclerView.setVisibility(View.VISIBLE);
+        linearLayoutListAll.setVisibility(View.GONE);
+        fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+
+        if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+            NParser.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
+            NParser2.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
+            NParser3.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+            DParser.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser2 != null && DParser2.getStatus() == AsyncTask.Status.RUNNING){
+            DParser2.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser3 != null && DParser3.getStatus() == AsyncTask.Status.RUNNING){
+            DParser3.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        if(state.equals("NAVER")) {
+            tabButton2.setTextSize(19);
+            tabButton2.setTextColor(Color.parseColor("#00c73c"));
+
+            myDataset.clear();
+            mRecyclerView.setAdapter(mAdapter);
+            switchs = false;
+
+            NParser2 = new NaverParser2();
+            NParser2.execute();
+
+            state = NAVER;
+            state2 = TAB2;
+        } else if(state.equals("DAUM")) {
+            tabButton2.setTextSize(19);
+            tabButton2.setTextColor(Color.parseColor("#f1685e"));
+
+            myDataset.clear();
+            mRecyclerView.setAdapter(mAdapter);
+            switchs = false;
+
+            DParser2 = new DaumParser2();
+            DParser2.execute();
+
+            state = DAUM;
+            state2 = TAB2;
+        }
+    }
+
+    public void tab3Event(){
+        tabButton1.setTextSize(16);
+        tabButton1.setTextColor(Color.parseColor("#000000"));
+        tabButton2.setTextSize(16);
+        tabButton2.setTextColor(Color.parseColor("#000000"));
+
+        mRecyclerView.setVisibility(View.VISIBLE);
+        linearLayoutListAll.setVisibility(View.GONE);
+        fab.setImageResource(R.drawable.ic_format_list_numbered_white_24px);
+
+        if(NParser != null && NParser.getStatus() == AsyncTask.Status.RUNNING){
+            NParser.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(NParser2 != null && NParser2.getStatus() == AsyncTask.Status.RUNNING){
+            NParser2.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(NParser3 != null && NParser3.getStatus() == AsyncTask.Status.RUNNING){
+            NParser3.cancel(true);
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser != null && DParser.getStatus() == AsyncTask.Status.RUNNING){
+            DParser.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser2 != null && DParser2.getStatus() == AsyncTask.Status.RUNNING){
+            DParser2.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(DParser3 != null && DParser3.getStatus() == AsyncTask.Status.RUNNING){
+            DParser3.cancel(true);
+            Log.v("appaaaa", "DParser cancel in button");
+            try{
+                Thread.sleep(500);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        if(state.equals("NAVER")) {
+            tabButton3.setTextSize(19);
+            tabButton3.setTextColor(Color.parseColor("#00c73c"));
+
+            myDataset.clear();
+            mRecyclerView.setAdapter(mAdapter);
+            switchs = false;
+
+            NParser3 = new NaverParser3();
+            NParser3.execute();
+
+            state = NAVER;
+            state2 = TAB3;
+        } else if(state.equals("DAUM")) {
+            tabButton3.setTextSize(19);
+            tabButton3.setTextColor(Color.parseColor("#f1685e"));
+
+            myDataset.clear();
+            mRecyclerView.setAdapter(mAdapter);
+            switchs = false;
+
+            DParser3 = new DaumParser3();
+            DParser3.execute();
+
+            state = DAUM;
+            state2 = TAB3;
+        }
+    }
 
     public class NaverParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
 
@@ -718,6 +751,7 @@ public class MainActivity extends AppCompatActivity {
             listAllText20.setVisibility(View.VISIBLE);
 
             checkLast=false;
+            isLast = false;
 
             super.onPreExecute();
         }
@@ -743,6 +777,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
             checkLast = true;
+            isLast = true;
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -873,7 +908,7 @@ public class MainActivity extends AppCompatActivity {
             listAllText20.setVisibility(View.VISIBLE);
 
             checkLast=false;
-
+            isLast=false;
             super.onPreExecute();
         }
 
@@ -898,6 +933,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
             checkLast = true;
+            isLast = true;
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -1027,7 +1063,8 @@ public class MainActivity extends AppCompatActivity {
             listAllText19.setVisibility(View.VISIBLE);
             listAllText20.setVisibility(View.VISIBLE);
 
-            checkLast=false;
+            checkLast = false;
+            isLast = false;
 
             super.onPreExecute();
         }
@@ -1053,10 +1090,10 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
             checkLast = true;
+            isLast = true;
             mAdapter.notifyDataSetChanged();
         }
     }
-
     public class DaumParser extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
 
         String url = "http://www.daum.net";
@@ -1180,7 +1217,8 @@ public class MainActivity extends AppCompatActivity {
             listAllText19.setVisibility(View.GONE);
             listAllText20.setVisibility(View.GONE);
 
-            checkLast=false;
+            checkLast = false;
+            isLast = false;
 
             super.onPreExecute();
         }
@@ -1206,7 +1244,318 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(ArrayList<SearchWord> tempList) {
             switchs = true; //데이터를 다 가져왔으면 클릭 가능
-            checkLast=true;
+            checkLast = true;
+            isLast = true;
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+    public class DaumParser2 extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
+
+        String url = "http://media.daum.net/entertain/ranking/keyword#none";
+        Integer position = 0;
+
+        @Override
+        protected ArrayList<SearchWord> doInBackground(Void... params) {
+            ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
+
+            try{
+                Document mDocument = Jsoup.connect(url).get();
+                Elements mElements = mDocument.select("div.aside_search li a.link_txt");
+
+                myDataset.clear();
+                wordList.clear();
+                for (int i = 10; i < 20; i++) {
+                    if(DParser2.isCancelled()){
+                        return null;
+                    }
+                    wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
+                    Log.v("dparser", "daum 반복문1 : " + i);
+                    Log.v("dparser", mElements.get(i).select("a[href]").get(0).text());
+                }
+
+                for(int i = 0; i < wordList.size(); i++){
+                    if(DParser2.isCancelled()){
+                        Log.v("appaaaa", "daum break2 : " + i);
+                        return null;
+                    }
+                    Log.v("appaaaa", "daum 반복문2 : " + i);
+                    SearchWord searchWord = new SearchWord();
+                    searchWord.setNumber(Integer.toString(i + 1));
+                    searchWord.setWord(wordList.get(i));
+
+                    String url = "http://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=" + searchWord.getWord();
+
+                    try{
+                        Document mDocument2 = Jsoup.connect(url).get();
+                        Elements newsElement = mDocument2.select("ul#clusterResultUL li");
+
+                        try{
+                            String onlyImageURL = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                            Document onlyImageDocument = Jsoup.connect(onlyImageURL).get();
+                            Elements onlyImageElement = onlyImageDocument.select("div.news ul.type01>li");
+
+                            if(!onlyImageElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                String temp = onlyImageElement.get(0).select("div.thumb a img").attr("src");
+                                String s = onlyImageElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                searchWord.setNewsImage(s);
+                            }
+                            else{
+                                searchWord.setNewsImage("NOIMAGE");
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+
+                        searchWord.setNewsURL(newsElement.get(0).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL2(newsElement.get(1).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL3(newsElement.get(2).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL4(newsElement.get(3).select("div.wrap_cont a").attr("href"));
+
+                        searchWord.setNewsTitle(newsElement.get(0).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle2(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle3(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle4(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
+
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+
+                    try{
+                        String replysUrl = "http://search.daum.net/search?w=social&m=web&period=&sd=&ed=&sort_type=socialweb&nil_search=btn&enc=utf8&q=" + searchWord.getWord()+ "&DA=STC";
+
+                        Document mDocument3 = Jsoup.connect(replysUrl).get();
+                        Elements replyElements = mDocument3.select("ul.list_live li");
+
+                        for(int j = 0; j < replyElements.size(); j++){
+                            if(DParser2.isCancelled()){
+                                Log.v("appaaaa", "daum break3 : " + j);
+                                return null;
+                            }
+                            //Log.v("appaaaa", "daum 반복문3 : " + j);
+                            Reply mReply = new Reply();
+
+                            mReply.name = replyElements.get(j).select("div.wrap_tit a strong").text();
+                            mReply.text = replyElements.get(j).select("span.f_eb").text();
+                            mReply.count1 = replyElements.get(j).select("span.f_nb").text();
+                            mReply.count2 = replyElements.get(j).select("a.f_nb").get(0).text();
+                            mReply.count3 = "  ";
+
+                            searchWord.getReplyArrayList().add(mReply);
+                        }
+
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    publishProgress(searchWord);
+                }
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            return tempList;
+        }
+
+
+        @Override
+        protected void onPreExecute() {
+            currentTimer();
+            loadingLayout.setVisibility(View.VISIBLE);
+
+            listAllText11.setVisibility(View.GONE);
+            listAllText12.setVisibility(View.GONE);
+            listAllText13.setVisibility(View.GONE);
+            listAllText14.setVisibility(View.GONE);
+            listAllText15.setVisibility(View.GONE);
+            listAllText16.setVisibility(View.GONE);
+            listAllText17.setVisibility(View.GONE);
+            listAllText18.setVisibility(View.GONE);
+            listAllText19.setVisibility(View.GONE);
+            listAllText20.setVisibility(View.GONE);
+
+            checkLast = false;
+            isLast = false;
+
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(SearchWord... values) {
+            myDataset.add(values[0]);
+            mAdapter.notifyItemInserted(position++);
+            //ListAllBinding(Integer.parseInt(values[0].getNumber()));
+            if(loadingLayout.getVisibility() == View.VISIBLE){
+                currentTimer();
+            }
+
+            if(Integer.parseInt(values[0].getNumber()) == 2){
+                loadingLayout.setVisibility(View.GONE);
+
+                for(int i = 0; i < wordList.size(); i++){
+                    ListAllBinding(i+1);
+                }
+            }
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<SearchWord> tempList) {
+            switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            checkLast = true;
+            isLast = true;
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
+    public class DaumParser3 extends AsyncTask<Void, SearchWord, ArrayList<SearchWord>> {
+
+        String url = "http://media.daum.net/entertain/ranking/keyword#none";
+        Integer position = 0;
+
+        @Override
+        protected ArrayList<SearchWord> doInBackground(Void... params) {
+            ArrayList<SearchWord> tempList = new ArrayList<SearchWord>();
+
+            try{
+                Document mDocument = Jsoup.connect(url).get();
+                Elements mElements = mDocument.select("div.aside_search li a.link_txt");
+
+                myDataset.clear();
+                wordList.clear();
+                for (int i = 20; i < 40; i++) {
+                    if(DParser3.isCancelled()){
+                        return null;
+                    }
+                    wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
+                    //Log.v("appaaaa", "daum 반복문1 : " + i);
+                }
+
+                for(int i = 0; i < wordList.size(); i++){
+                    if(DParser3.isCancelled()){
+                        Log.v("appaaaa", "daum break2 : " + i);
+                        return null;
+                    }
+                    Log.v("appaaaa", "daum 반복문2 : " + i);
+                    SearchWord searchWord = new SearchWord();
+                    searchWord.setNumber(Integer.toString(i + 1));
+                    searchWord.setWord(wordList.get(i));
+
+                    String url = "http://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=" + searchWord.getWord();
+
+                    try{
+                        Document mDocument2 = Jsoup.connect(url).get();
+                        Elements newsElement = mDocument2.select("ul#clusterResultUL li");
+
+                        try{
+                            String onlyImageURL = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                            Document onlyImageDocument = Jsoup.connect(onlyImageURL).get();
+                            Elements onlyImageElement = onlyImageDocument.select("div.news ul.type01>li");
+
+                            if(!onlyImageElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                String temp = onlyImageElement.get(0).select("div.thumb a img").attr("src");
+                                String s = onlyImageElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                searchWord.setNewsImage(s);
+                            }
+                            else{
+                                searchWord.setNewsImage("NOIMAGE");
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+
+                        searchWord.setNewsURL(newsElement.get(0).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL2(newsElement.get(1).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL3(newsElement.get(2).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL4(newsElement.get(3).select("div.wrap_cont a").attr("href"));
+
+                        searchWord.setNewsTitle(newsElement.get(0).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle2(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle3(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle4(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
+
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+
+                    try{
+                        String replysUrl = "http://search.daum.net/search?w=social&m=web&period=&sd=&ed=&sort_type=socialweb&nil_search=btn&enc=utf8&q=" + searchWord.getWord()+ "&DA=STC";
+
+                        Document mDocument3 = Jsoup.connect(replysUrl).get();
+                        Elements replyElements = mDocument3.select("ul.list_live li");
+
+                        for(int j = 0; j < replyElements.size(); j++){
+                            if(DParser3.isCancelled()){
+                                Log.v("appaaaa", "daum break3 : " + j);
+                                return null;
+                            }
+                            //Log.v("appaaaa", "daum 반복문3 : " + j);
+                            Reply mReply = new Reply();
+
+                            mReply.name = replyElements.get(j).select("div.wrap_tit a strong").text();
+                            mReply.text = replyElements.get(j).select("span.f_eb").text();
+                            mReply.count1 = replyElements.get(j).select("span.f_nb").text();
+                            mReply.count2 = replyElements.get(j).select("a.f_nb").get(0).text();
+                            mReply.count3 = "  ";
+
+                            searchWord.getReplyArrayList().add(mReply);
+                        }
+
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    publishProgress(searchWord);
+                }
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            return tempList;
+        }
+
+
+        @Override
+        protected void onPreExecute() {
+            currentTimer();
+            loadingLayout.setVisibility(View.VISIBLE);
+
+            listAllText11.setVisibility(View.GONE);
+            listAllText12.setVisibility(View.GONE);
+            listAllText13.setVisibility(View.GONE);
+            listAllText14.setVisibility(View.GONE);
+            listAllText15.setVisibility(View.GONE);
+            listAllText16.setVisibility(View.GONE);
+            listAllText17.setVisibility(View.GONE);
+            listAllText18.setVisibility(View.GONE);
+            listAllText19.setVisibility(View.GONE);
+            listAllText20.setVisibility(View.GONE);
+
+            checkLast = false;
+            isLast = false;
+
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(SearchWord... values) {
+            myDataset.add(values[0]);
+            mAdapter.notifyItemInserted(position++);
+            //ListAllBinding(Integer.parseInt(values[0].getNumber()));
+            if(loadingLayout.getVisibility() == View.VISIBLE){
+                currentTimer();
+            }
+
+            if(Integer.parseInt(values[0].getNumber()) == 2){
+                loadingLayout.setVisibility(View.GONE);
+
+                for(int i = 0; i < wordList.size(); i++){
+                    ListAllBinding(i+1);
+                }
+            }
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<SearchWord> tempList) {
+            switchs = true; //데이터를 다 가져왔으면 클릭 가능
+            checkLast = true;
+            isLast = true;
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -1561,6 +1910,14 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LEVEL_UP, bundle);
 
         //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
+    }
+
+    public void onSendTab1(){
+        String s = "click tab1 naver";
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent("TEST_TAB_CUSTOM_EVENT", bundle);
     }
 
 }

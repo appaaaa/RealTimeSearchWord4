@@ -7,8 +7,8 @@ android {
         applicationId "com.secondtype.realtimesearchword4"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 10
-        versionName "1.10"
+        versionCode 11
+        versionName "1.11"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -25,6 +25,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
+
 //    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 
@@ -43,6 +44,9 @@ dependencies {
 
     //kakao
     compile group: 'com.kakao.sdk', name: 'kakaolink', version: project.KAKAO_SDK_VERSION
+
+    //swipe
+    compile 'com.github.orangegangsters:swipy:1.2.3@aar'
 }
 
 apply plugin: 'com.google.gms.google-services'
