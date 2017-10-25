@@ -456,12 +456,15 @@
             android:textColor="#FFFFFF"
             android:textSize="50sp" />
 
-        <TextView
+        <com.hanks.htextview.typer.TyperTextView
+            android:id="@+id/textview_loadingtext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="지금이슈"
             android:textColor="#FFFFFF"
+            app:charIncrease="3"
+            app:typerSpeed="80"
             android:textSize="40sp" />
     </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>

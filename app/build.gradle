@@ -7,8 +7,8 @@ android {
         applicationId "com.secondtype.realtimesearchword4"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 11
-        versionName "1.11"
+        versionCode 12
+        versionName "1.12"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -47,6 +47,15 @@ dependencies {
 
     //swipe
     compile 'com.github.orangegangsters:swipy:1.2.3@aar'
+
+    //custom font
+    compile 'com.tsengvn:typekit:1.0.1'
+
+    String htextview_version = "0.1.1"
+    //text animation
+    compile "com.hanks:htextview-base:$htextview_version"
+    compile "com.hanks:htextview-typer:$htextview_version"
+
 }
 
 apply plugin: 'com.google.gms.google-services'

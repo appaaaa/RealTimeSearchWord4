@@ -157,6 +157,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
             public void onClick(View view) {
 
                 mMainActivity.onSendNEWS();
+                mMainActivity.onClickNews();
 
                 if(s != null && MainActivity.switchs) {
                     Intent intent = new Intent(mMainActivity, DetailWeb.class);
@@ -198,6 +199,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                 listViewDialog.show();
 
                 mMainActivity.onSendReply();
+                mMainActivity.onClickReply();
 
                 ///////// + reply back button ////////////////////////////
                 replyBack.setOnClickListener(new View.OnClickListener(){
@@ -228,6 +230,7 @@ public class SearchWordAdapter extends RecyclerView.Adapter<SearchWordAdapter.Vi
                 listViewDialog.show();
 
                 mMainActivity.onSendReply();
+                mMainActivity.onClickReply();
 
                 ///////// + reply back button ////////////////////////////
                 replyBack.setOnClickListener(new View.OnClickListener(){

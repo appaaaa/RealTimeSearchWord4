@@ -49,11 +49,15 @@ import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.hanks.htextview.base.HTextView;
+import com.hanks.htextview.typer.TyperTextView;
 import com.kakao.kakaolink.KakaoLink;
 import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
 import com.kakao.util.KakaoParameterException;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
+import com.tsengvn.typekit.Typekit;
+import com.tsengvn.typekit.TypekitContextWrapper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -84,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
 
     private LinearLayout loadingLayout;
     private TextView loadingTime;
+    private HTextView loadingText;
+
     private TextView titleTime;
 
     private ArrayList<Reply> replyList;
@@ -93,6 +99,16 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAB1 = "TAB1";
     public static final String TAB2 = "TAB2";
     public static final String TAB3 = "TAB3";
+
+    public static final String CLICK_LIST = "CLICK_LIST";
+    public static final String CLICK_REPLY = "CLICK_REPLY";
+    public static final String CLICK_OTHER_NEWS = "CLICK_OTER_NEWS";
+    public static final String CLICK_NEWS = "CLICK_NEWS";
+    public static final String CLICK_DAUM = "CLICK_DAUM";
+    public static final String VIEW_NAVER_NEWSTOPIC = "VIEW_NAVER_NEWSTOPIC";
+    public static final String VIEW_NAVER_ENTERTAINMENT = "VIEW_NAVER_ENTERTAINMENT";
+    public static final String VIEW_DAUM_NEWSTOPIC = "VIEW_DAUM_NEWSTOPIC";
+    public static final String VIEW_DAUM_ENTERTAINMENT = "VIEW_DAUM_ENTERTAINMENT";
 
 
     private String state = NAVER; //detailweb에서 현재가 네이버인지, 다음인지 구분하기 위한 글로벌 변수
@@ -161,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         mContext = this;
 
         setContentView(R.layout.activity_main);
@@ -173,6 +190,11 @@ public class MainActivity extends AppCompatActivity {
 
         loadingLayout = (LinearLayout)findViewById(R.id.linearlayout_loading);
         loadingTime = (TextView)findViewById(R.id.textview_starttime);
+        loadingText = (HTextView) findViewById(R.id.textview_loadingtext);
+        loadingText.animateText("지금이슈");
+
+
+
         titleTime = (TextView)findViewById(R.id.textview_title);
 
         fab = (FloatingActionButton)findViewById(R.id.fab);
@@ -185,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
                     linearLayoutListAll.setVisibility(View.VISIBLE);
                     fab.setImageResource(R.drawable.ic_video_label_white_24px);
                     onSendList();
+                    onClickList();
                 }else{ //현재 검색어 리스트면 카드보기로 바꿈
                     isAllList = false;
                     mRecyclerView.setVisibility(View.VISIBLE);
@@ -233,6 +256,10 @@ public class MainActivity extends AppCompatActivity {
                             tab2Event();
                         }else if(state2.equals(TAB2)){
                             tab3Event();
+                        }else if(state2.equals(TAB3)){
+                            state = DAUM;
+                            tab1Event();
+                            topListDesign();
                         }
                     }
 
@@ -283,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
                 topListDesign();
                 tab1Event();
                 onSendDAUM();
+                onClickDaum();
             }
         });
         tabButton1 = (Button)findViewById(R.id.button_tab1);
@@ -348,7 +376,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void tab1Event(){
-        onSendTab1();
         tabButton2.setTextSize(16);
         tabButton2.setTextColor(Color.parseColor("#000000"));
         tabButton3.setTextSize(16);
@@ -419,11 +446,10 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
             switchs = false;
 
+            state2 = TAB1;
+
             NParser = new NaverParser();
             NParser.execute();
-
-            state = NAVER;
-            state2 = TAB1;
 
         } else if(state.equals("DAUM")) {
             tabButton1.setTextSize(19);
@@ -433,11 +459,10 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
             switchs = false;
 
+            state2 = TAB1;
+
             DParser = new DaumParser();
             DParser.execute();
-
-            state = DAUM;
-            state2 = TAB1;
         }
     }
 
@@ -511,11 +536,13 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
             switchs = false;
 
+            state2 = TAB2;
+
             NParser2 = new NaverParser2();
             NParser2.execute();
 
-            state = NAVER;
-            state2 = TAB2;
+            onClickNaverNewstopic();
+
         } else if(state.equals("DAUM")) {
             tabButton2.setTextSize(19);
             tabButton2.setTextColor(Color.parseColor("#f1685e"));
@@ -524,11 +551,12 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
             switchs = false;
 
+            state2 = TAB2;
+
             DParser2 = new DaumParser2();
             DParser2.execute();
 
-            state = DAUM;
-            state2 = TAB2;
+            onClickDaumNewstopic();
         }
     }
 
@@ -602,11 +630,13 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
             switchs = false;
 
+            state2 = TAB3;
+
             NParser3 = new NaverParser3();
             NParser3.execute();
 
-            state = NAVER;
-            state2 = TAB3;
+            onClickNaverEntertainment();
+
         } else if(state.equals("DAUM")) {
             tabButton3.setTextSize(19);
             tabButton3.setTextColor(Color.parseColor("#f1685e"));
@@ -615,11 +645,12 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
             switchs = false;
 
+            state2 = TAB3;
+
             DParser3 = new DaumParser3();
             DParser3.execute();
 
-            state = DAUM;
-            state2 = TAB3;
+            onClickDaumEntertainment();
         }
     }
 
@@ -737,7 +768,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             currentTimer();
-            loadingLayout.setVisibility(View.VISIBLE);
+            loadingViewShow();
 
             listAllText11.setVisibility(View.VISIBLE);
             listAllText12.setVisibility(View.VISIBLE);
@@ -761,7 +792,7 @@ public class MainActivity extends AppCompatActivity {
             myDataset.add(values[0]);
             mAdapter.notifyItemInserted(position++);
 
-        //    ListAllBinding(Integer.parseInt(values[0].getNumber()));
+            //    ListAllBinding(Integer.parseInt(values[0].getNumber()));
 
             if(Integer.parseInt(values[0].getNumber()) == 2){
                 loadingLayout.setVisibility(View.GONE);
@@ -894,7 +925,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             currentTimer();
-            loadingLayout.setVisibility(View.VISIBLE);
+            loadingViewShow();
 
             listAllText11.setVisibility(View.VISIBLE);
             listAllText12.setVisibility(View.VISIBLE);
@@ -1050,7 +1081,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             currentTimer();
-            loadingLayout.setVisibility(View.VISIBLE);
+            loadingViewShow();
 
             listAllText11.setVisibility(View.VISIBLE);
             listAllText12.setVisibility(View.VISIBLE);
@@ -1116,83 +1147,83 @@ public class MainActivity extends AppCompatActivity {
                     }
                     wordList.add(mElements.get(i).select("a[href]").get(0).text()); //title
                     //Log.v("appaaaa", "daum 반복문1 : " + i);
-                 }
+                }
 
-                 for(int i = 0; i < 10; i++){
-                     if(DParser.isCancelled()){
-                         Log.v("appaaaa", "daum break2 : " + i);
-                         return null;
-                     }
-                     Log.v("appaaaa", "daum 반복문2 : " + i);
-                     SearchWord searchWord = new SearchWord();
-                     searchWord.setNumber(Integer.toString(i + 1));
-                     searchWord.setWord(mElements.get(i).select("a[href]").get(0).text());
+                for(int i = 0; i < 10; i++){
+                    if(DParser.isCancelled()){
+                        Log.v("appaaaa", "daum break2 : " + i);
+                        return null;
+                    }
+                    Log.v("appaaaa", "daum 반복문2 : " + i);
+                    SearchWord searchWord = new SearchWord();
+                    searchWord.setNumber(Integer.toString(i + 1));
+                    searchWord.setWord(mElements.get(i).select("a[href]").get(0).text());
 
-                     String url = "http://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=" + searchWord.getWord();
+                    String url = "http://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=" + searchWord.getWord();
 
-                     try{
-                         Document mDocument2 = Jsoup.connect(url).get();
-                         Elements newsElement = mDocument2.select("ul#clusterResultUL li");
+                    try{
+                        Document mDocument2 = Jsoup.connect(url).get();
+                        Elements newsElement = mDocument2.select("ul#clusterResultUL li");
 
-                         try{
-                             String onlyImageURL = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
-                             Document onlyImageDocument = Jsoup.connect(onlyImageURL).get();
-                             Elements onlyImageElement = onlyImageDocument.select("div.news ul.type01>li");
+                        try{
+                            String onlyImageURL = "https://search.naver.com/search.naver?where=news&sm=tab_jum&ie=utf8&query=" + searchWord.getWord();
+                            Document onlyImageDocument = Jsoup.connect(onlyImageURL).get();
+                            Elements onlyImageElement = onlyImageDocument.select("div.news ul.type01>li");
 
-                             if(!onlyImageElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
-                                 String temp = onlyImageElement.get(0).select("div.thumb a img").attr("src");
-                                 String s = onlyImageElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
-                                 searchWord.setNewsImage(s);
-                             }
-                             else{
-                                 searchWord.setNewsImage("NOIMAGE");
-                             }
-                         }catch(Exception e){
-                             e.printStackTrace();
-                         }
+                            if(!onlyImageElement.get(0).select("div.thumb a img").attr("src").isEmpty()){
+                                String temp = onlyImageElement.get(0).select("div.thumb a img").attr("src");
+                                String s = onlyImageElement.get(0).select("div.thumb a img").attr("src").substring(0, temp.length()-28);
+                                searchWord.setNewsImage(s);
+                            }
+                            else{
+                                searchWord.setNewsImage("NOIMAGE");
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
 
-                         searchWord.setNewsURL(newsElement.get(0).select("div.wrap_cont a").attr("href"));
-                         searchWord.setNewsURL2(newsElement.get(1).select("div.wrap_cont a").attr("href"));
-                         searchWord.setNewsURL3(newsElement.get(2).select("div.wrap_cont a").attr("href"));
-                         searchWord.setNewsURL4(newsElement.get(3).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL(newsElement.get(0).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL2(newsElement.get(1).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL3(newsElement.get(2).select("div.wrap_cont a").attr("href"));
+                        searchWord.setNewsURL4(newsElement.get(3).select("div.wrap_cont a").attr("href"));
 
-                         searchWord.setNewsTitle(newsElement.get(0).select("div.wrap_cont a.f_link_b").text());
-                         searchWord.setNewsTitle2(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
-                         searchWord.setNewsTitle3(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
-                         searchWord.setNewsTitle4(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle(newsElement.get(0).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle2(newsElement.get(1).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle3(newsElement.get(2).select("div.wrap_cont a.f_link_b").text());
+                        searchWord.setNewsTitle4(newsElement.get(3).select("div.wrap_cont a.f_link_b").text());
 
-                     }catch(Exception e){
-                         e.printStackTrace();
-                     }
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
 
-                     try{
-                         String replysUrl = "http://search.daum.net/search?w=social&m=web&period=&sd=&ed=&sort_type=socialweb&nil_search=btn&enc=utf8&q=" + searchWord.getWord()+ "&DA=STC";
+                    try{
+                        String replysUrl = "http://search.daum.net/search?w=social&m=web&period=&sd=&ed=&sort_type=socialweb&nil_search=btn&enc=utf8&q=" + searchWord.getWord()+ "&DA=STC";
 
-                         Document mDocument3 = Jsoup.connect(replysUrl).get();
-                         Elements replyElements = mDocument3.select("ul.list_live li");
+                        Document mDocument3 = Jsoup.connect(replysUrl).get();
+                        Elements replyElements = mDocument3.select("ul.list_live li");
 
-                         for(int j = 0; j < replyElements.size(); j++){
-                             if(DParser.isCancelled()){
-                                 Log.v("appaaaa", "daum break3 : " + j);
-                                 return null;
-                             }
-                             //Log.v("appaaaa", "daum 반복문3 : " + j);
-                             Reply mReply = new Reply();
+                        for(int j = 0; j < replyElements.size(); j++){
+                            if(DParser.isCancelled()){
+                                Log.v("appaaaa", "daum break3 : " + j);
+                                return null;
+                            }
+                            //Log.v("appaaaa", "daum 반복문3 : " + j);
+                            Reply mReply = new Reply();
 
-                             mReply.name = replyElements.get(j).select("div.wrap_tit a strong").text();
-                             mReply.text = replyElements.get(j).select("span.f_eb").text();
-                             mReply.count1 = replyElements.get(j).select("span.f_nb").text();
-                             mReply.count2 = replyElements.get(j).select("a.f_nb").get(0).text();
-                             mReply.count3 = "  ";
+                            mReply.name = replyElements.get(j).select("div.wrap_tit a strong").text();
+                            mReply.text = replyElements.get(j).select("span.f_eb").text();
+                            mReply.count1 = replyElements.get(j).select("span.f_nb").text();
+                            mReply.count2 = replyElements.get(j).select("a.f_nb").get(0).text();
+                            mReply.count3 = "  ";
 
-                             searchWord.getReplyArrayList().add(mReply);
-                         }
+                            searchWord.getReplyArrayList().add(mReply);
+                        }
 
-                     }catch (Exception e){
-                         e.printStackTrace();
-                     }
-                     publishProgress(searchWord);
-                 }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    publishProgress(searchWord);
+                }
 
             }catch(Exception e){
                 e.printStackTrace();
@@ -1204,7 +1235,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             currentTimer();
-            loadingLayout.setVisibility(View.VISIBLE);
+            loadingViewShow();
 
             listAllText11.setVisibility(View.GONE);
             listAllText12.setVisibility(View.GONE);
@@ -1359,7 +1390,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             currentTimer();
-            loadingLayout.setVisibility(View.VISIBLE);
+            loadingViewShow();
 
             listAllText11.setVisibility(View.GONE);
             listAllText12.setVisibility(View.GONE);
@@ -1514,7 +1545,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             currentTimer();
-            loadingLayout.setVisibility(View.VISIBLE);
+            loadingViewShow();
 
             listAllText11.setVisibility(View.GONE);
             listAllText12.setVisibility(View.GONE);
@@ -1561,6 +1592,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+    public void loadingViewShow(){
+        String str = "";
+
+        loadingLayout.setVisibility(View.VISIBLE);
+
+        if(state.equals(NAVER)) {
+            loadingLayout.setBackgroundResource(R.color.colorNaver);
+            str += "네이버 ";
+        }else if(state.equals(DAUM)) {
+            loadingLayout.setBackgroundResource(R.color.colorDaum);
+            str += "다음 ";
+        }
+
+        if(state2.equals(TAB1)) {
+            str += "실시간 검색어";
+        }else if(state2.equals(TAB2)) {
+            str += "뉴스토픽";
+        }else if(state2.equals(TAB3)) {
+            str += "연애&스포츠";
+        }
+
+        loadingText.setText(str);
+    }
 
     public void currentTimer(){
         long now = System.currentTimeMillis();
@@ -1852,73 +1907,102 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void onSendList( ){
-        String s = "click list";
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(TypekitContextWrapper.wrap(newBase));
+    }
 
+    public void onSendList( ){
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "List");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
-
-      //  Toast.makeText(getApplicationContext(), "List Event", Toast.LENGTH_LONG).show();
     }
 
     public void onSendShare( ){
-        String s = "click share";
-
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Share");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, bundle);
-
-      //  Toast.makeText(getApplicationContext(), "Share Event", Toast.LENGTH_LONG).show();
     }
 
     public void onSendReply( ){
-        String s = "click reply";
-
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Reply");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_ITEM_LIST, bundle);
-
-        //  Toast.makeText(getApplicationContext(), "Click reply", Toast.LENGTH_LONG).show();
     }
 
     public void onSendOtherPost( ){
-        String s = "click other post";
-
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "others");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.GENERATE_LEAD, bundle);
-
-        //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
     }
 
     public void onSendNEWS( ){
-        String s = "click news";
-
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "news");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.PRESENT_OFFER, bundle);
-
-        //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
     }
 
     public void onSendDAUM( ){
-        String s = "click daum";
-
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "daum");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LEVEL_UP, bundle);
-
-        //  Toast.makeText(getApplicationContext(), "click other post", Toast.LENGTH_LONG).show();
     }
 
-    public void onSendTab1(){
-        String s = "click tab1 naver";
-
+    public void onClickList(){
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
-        mFirebaseAnalytics.logEvent("TEST_TAB_CUSTOM_EVENT", bundle);
+        mFirebaseAnalytics.logEvent(CLICK_LIST, bundle);
     }
+
+    public void onClickReply(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(CLICK_REPLY, bundle);
+    }
+
+    public void onClickOtherNews(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(CLICK_OTHER_NEWS, bundle);
+    }
+
+    public void onClickNews(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(CLICK_NEWS, bundle);
+    }
+
+    public void onClickDaum(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(CLICK_DAUM, bundle);
+    }
+
+    public void onClickNaverNewstopic(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(VIEW_NAVER_NEWSTOPIC, bundle);
+    }
+
+    public void onClickNaverEntertainment(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(VIEW_NAVER_ENTERTAINMENT, bundle);
+    }
+
+    public void onClickDaumNewstopic(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(VIEW_DAUM_NEWSTOPIC, bundle);
+    }
+
+    public void onClickDaumEntertainment(){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "click tab naver");
+        mFirebaseAnalytics.logEvent(VIEW_DAUM_ENTERTAINMENT, bundle);
+    }
+
+
 
 }
 

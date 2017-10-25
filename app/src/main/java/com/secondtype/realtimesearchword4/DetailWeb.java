@@ -192,6 +192,7 @@ public class DetailWeb extends AppCompatActivity {
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
                 ((MainActivity)MainActivity.mContext).onSendOtherPost();
+                ((MainActivity)MainActivity.mContext).onClickOtherNews();
             }
         });
         word2.setOnClickListener(new View.OnClickListener(){
@@ -204,6 +205,7 @@ public class DetailWeb extends AppCompatActivity {
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
                 ((MainActivity)MainActivity.mContext).onSendOtherPost();
+                ((MainActivity)MainActivity.mContext).onClickOtherNews();
             }
         });
         word3.setOnClickListener(new View.OnClickListener(){
@@ -216,6 +218,7 @@ public class DetailWeb extends AppCompatActivity {
                 String titleText = "\"" + word + "\"" + " 관련 최신기사";
                 mTitleTextView.setText(titleText);
                 ((MainActivity)MainActivity.mContext).onSendOtherPost();
+                ((MainActivity)MainActivity.mContext).onClickOtherNews();
             }
         });
 
